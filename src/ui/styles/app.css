@@ -1,0 +1,763 @@
+/* Abacus — the Estimator Design System, built on Modernist.
+   Ground, one ink, one red. Zero radius. Rules do the organising, not shadows.
+   The accent is spent on exactly three things: the chosen rung, the P80 figure,
+   and the primary action. Cross-table heat is ink: a big cell is not a warning. */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap");
+/* — Estimator Design System, on Modernist. Ground, one ink, one red. — */
+:root {
+  color-scheme: light;
+}
+
+body,
+#root {
+  --color-bg: #f3f2f2;
+  --color-surface: #eae9e9;
+  --color-text: #201e1d;
+  --color-accent: #ec3013;
+  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
+  --color-neutral-100: #f8f4f4;
+  --color-neutral-200: #eae7e7;
+  --color-neutral-300: #d7d3d3;
+  --color-neutral-400: #bab6b6;
+  --color-neutral-500: #9b9797;
+  --color-neutral-600: #7d7979;
+  --color-neutral-700: #605d5d;
+  --color-neutral-800: #444141;
+  --color-neutral-900: #2d2b2b;
+  --color-accent-100: #fff2ef;
+  --color-accent-200: #ffe0d9;
+  --color-accent-300: #ffc4b8;
+  --color-accent-500: #ff563c;
+  --color-accent-600: #dd2b0f;
+  --color-accent-700: #ae1800;
+  --color-accent-800: #7c1405;
+  --surface-page: var(--color-bg);
+  --surface-panel: var(--color-surface);
+  --surface-group: color-mix(in srgb, var(--color-text) 6%, transparent);
+  --surface-subgroup: color-mix(in srgb, var(--color-text) 2.5%, transparent);
+  --surface-hover: color-mix(in srgb, var(--color-text) 7%, transparent);
+  --text-secondary: var(--color-neutral-700);
+  --text-tertiary: var(--color-neutral-600);
+  --text-disabled: var(--color-neutral-400);
+  --rule-hair: 1px solid var(--color-divider);
+  --rule-strong: 2px solid var(--color-divider);
+  --emphasis-commit: var(--color-accent-700);
+  --font-heading: "Archivo", system-ui, sans-serif;
+  --font-body: "Archivo", system-ui, sans-serif;
+  --text-figure-xl: 30px;
+  --text-figure: 28px;
+  --text-figure-sm: 20px;
+  --text-title: 21px;
+  --text-subtitle: 17px;
+  --text-body: 15px;
+  --text-prose: 13.5px;
+  --text-table: 13px;
+  --text-small: 12.5px;
+  --text-label: 11px;
+  --text-rung: 10.5px;
+  --tracking-label: 0.12em;
+  --leading-prose: 1.5;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --row-indent: 34px;
+  --gutter: var(--space-6);
+  --conf-high-bg: oklch(0.945 0.045 152);
+  --conf-high-bd: oklch(0.8 0.095 152);
+  --conf-high-fg: oklch(0.42 0.085 152);
+  --conf-med-bg: oklch(0.955 0.055 85);
+  --conf-med-bd: oklch(0.83 0.115 82);
+  --conf-med-fg: oklch(0.46 0.095 72);
+  --conf-low-bg: var(--color-accent-100);
+  --conf-low-bd: var(--color-accent-300);
+  --conf-low-fg: var(--color-accent-800);
+  --heat-1: color-mix(in srgb, var(--color-text) 5%, transparent);
+  --heat-2: color-mix(in srgb, var(--color-text) 11%, transparent);
+  --heat-3: color-mix(in srgb, var(--color-text) 19%, transparent);
+  --heat-4: color-mix(in srgb, var(--color-text) 29%, transparent);
+  --heat-5: color-mix(in srgb, var(--color-text) 42%, transparent);
+  --range-track: color-mix(in srgb, var(--color-text) 8%, transparent);
+  --range-likely: var(--color-neutral-500);
+  --range-tail: var(--color-accent);
+  --range-tick: var(--color-text);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: 1.55;
+  min-height: 100vh;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+p {
+  margin: 0 0 var(--space-3);
+}
+*:focus {
+  outline: none;
+}
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+/* Animation: none. A figure that animates is a figure you cannot trust to be current. */
+*,
+*::before,
+*::after {
+  transition: none !important;
+  animation: none !important;
+}
+.ttl {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+}
+.mono-lbl {
+  font-size: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.commit {
+  color: var(--emphasis-commit);
+}
+.prose {
+  font-size: var(--text-prose);
+  line-height: var(--leading-prose);
+  color: var(--color-neutral-800);
+}
+.sm {
+  font-size: var(--text-small);
+  color: var(--text-secondary);
+}
+.tert {
+  color: var(--text-tertiary);
+}
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+}
+.hr2 {
+  height: 2px;
+  border: 0;
+  background: var(--color-divider);
+}
+/* — buttons — */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.2;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 7px 13px;
+  border-radius: 0;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+.btn-primary:hover {
+  background: var(--color-accent-600);
+}
+.btn-primary:active {
+  background: var(--color-accent-700);
+}
+/* — the one floating control: reachable from anywhere, never mistaken for a row action — */
+.btn-fab {
+  gap: 9px;
+  padding: 16px 28px;
+  font-size: 16px;
+  border: 2px solid var(--color-text);
+}
+.btn-fab svg {
+  width: 17px;
+  height: 17px;
+}
+.btn-secondary {
+  border-color: var(--color-divider);
+}
+.btn-secondary:hover {
+  background: var(--surface-hover);
+}
+.btn-ghost {
+  color: var(--color-accent);
+  padding-inline: var(--space-1);
+}
+.btn-ghost:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+/* — destructive confirmation: text stays red, fill never does — the red budget is spent already. */
+.btn-danger {
+  border-color: var(--color-divider);
+  color: var(--color-accent-700);
+}
+.btn-danger:hover {
+  background: var(--conf-low-bg);
+  border-color: var(--color-accent);
+}
+.btn-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid var(--color-divider);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+}
+.btn-mini svg {
+  flex: none;
+}
+.btn-mini:hover {
+  background: var(--surface-hover);
+  border-color: var(--color-text);
+  color: var(--color-text);
+}
+.btn-mini.danger:hover {
+  background: var(--conf-low-bg);
+  border-color: var(--color-accent);
+  color: var(--color-accent-700);
+}
+/* — tags — */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 0;
+  white-space: nowrap;
+}
+.tag-neutral {
+  background: var(--color-neutral-100);
+  color: var(--color-neutral-800);
+}
+.tag-outline {
+  border: 1px solid var(--color-divider);
+  color: var(--text-secondary);
+}
+.tag-outline .btn-mini {
+  border: 0;
+  padding: 2px;
+}
+/* — tab bar — */
+.tabbar {
+  display: flex;
+  gap: 2px;
+}
+.tabbtn {
+  border: 1px solid transparent;
+  border-bottom: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 9px 18px;
+  font: inherit;
+  font-size: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: -1px;
+}
+.tabbtn:hover {
+  color: var(--color-text);
+}
+.tabbtn.on {
+  border-color: var(--color-divider);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+/* — chips — */
+.chip {
+  border: 1px solid var(--color-divider);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  padding: 3px 9px;
+  font-size: var(--text-label);
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+.chip:hover {
+  background: var(--surface-hover);
+}
+.chip.on {
+  background: var(--color-text);
+  border-color: var(--color-text);
+  color: var(--color-bg);
+}
+/* — segmented controls — */
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--color-divider);
+}
+.seg-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: inherit;
+}
+.seg-opt + .seg-opt {
+  border-left: 1px solid var(--color-divider);
+}
+.seg-opt.on {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+.seg-opt:not(.on):hover {
+  background: var(--surface-hover);
+}
+/* — the ladder: five named rungs, equal width, the word not the number — */
+.lad {
+  width: 100%;
+}
+.lad .seg-opt {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 3px;
+  font-size: var(--text-rung);
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: center;
+}
+/* — confidence: the one dimension carrying hue — */
+.conf .seg-opt {
+  padding: 5px 9px;
+  color: var(--color-neutral-500);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-table);
+}
+.conf .seg-opt.on {
+  background: transparent;
+}
+.conf .cf-h.on {
+  background: var(--conf-high-bg);
+  color: var(--conf-high-fg);
+  box-shadow: inset 0 0 0 1.5px var(--conf-high-bd);
+}
+.conf .cf-m.on {
+  background: var(--conf-med-bg);
+  color: var(--conf-med-fg);
+  box-shadow: inset 0 0 0 1.5px var(--conf-med-bd);
+}
+.conf .cf-l.on {
+  background: var(--conf-low-bg);
+  color: var(--conf-low-fg);
+  box-shadow: inset 0 0 0 1.5px var(--conf-low-bd);
+}
+.conf-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  flex: none;
+}
+.conf-dot.H {
+  background: var(--conf-high-bd);
+}
+.conf-dot.M {
+  background: var(--conf-med-bd);
+}
+.conf-dot.L {
+  background: var(--conf-low-bd);
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: var(--text-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pill.H {
+  background: var(--conf-high-bg);
+  color: var(--conf-high-fg);
+  box-shadow: inset 0 0 0 1.5px var(--conf-high-bd);
+}
+.pill.M {
+  background: var(--conf-med-bg);
+  color: var(--conf-med-fg);
+  box-shadow: inset 0 0 0 1.5px var(--conf-med-bd);
+}
+.pill.L {
+  background: var(--conf-low-bg);
+  color: var(--conf-low-fg);
+  box-shadow: inset 0 0 0 1.5px var(--conf-low-bd);
+}
+/* — review progress, workshop only: reuses confidence's green/amber rather than
+   adding a second hue scale to the system. */
+.reviewed-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: var(--text-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.reviewed-badge.done {
+  background: var(--conf-high-bg);
+  color: var(--conf-high-fg);
+  box-shadow: inset 0 0 0 1.5px var(--conf-high-bd);
+}
+.reviewed-badge.pending {
+  background: var(--conf-med-bg);
+  color: var(--conf-med-fg);
+  box-shadow: inset 0 0 0 1.5px var(--conf-med-bd);
+}
+/* — direction: exposed / consumed, API rows only — */
+.dir .seg-opt {
+  padding: 4px 5px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+/* — backlog bands and rows; two postures, same table — */
+.backlog {
+  font-size: var(--text-prose);
+  overflow-x: auto;
+}
+.grouphd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--gutter);
+  background: var(--surface-group);
+  border-top: var(--rule-strong);
+  border-bottom: var(--rule-hair);
+}
+/* — subsystem band: one level above the component, so it carries the heavier rule. — */
+.subhd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--gutter);
+  background: var(--color-neutral-200);
+  border-top: 3px solid var(--color-text);
+  border-bottom: var(--rule-hair);
+}
+.typehd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 5px var(--gutter) 5px var(--row-indent);
+  background: var(--surface-subgroup);
+  border-bottom: var(--rule-hair);
+}
+.row {
+  display: grid;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px var(--gutter) 6px var(--row-indent);
+  border-bottom: var(--rule-hair);
+}
+.row:hover {
+  background: var(--surface-hover);
+}
+.backlog.shop {
+  font-size: 16px;
+}
+.backlog.shop .row {
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
+.backlog.shop .c-dir,
+.backlog.shop .c-lot,
+.backlog.shop .c-range {
+  display: none;
+}
+.backlog.shop .lad .seg-opt {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-size: 11px;
+}
+.backlog.shop .conf .seg-opt {
+  padding: 8px 7px;
+  font-size: 13px;
+}
+.backlog.shop .typehd,
+.backlog.shop .grouphd {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+/* — inline editors — */
+.mini {
+  width: 100%;
+  border: 0;
+  border-bottom: var(--rule-hair);
+  background: transparent;
+  font: inherit;
+  font-size: var(--text-table);
+  padding: 3px 0;
+  color: inherit;
+}
+.mini:focus {
+  outline: none;
+  border-bottom-color: var(--color-accent);
+}
+.numin {
+  border: 1px solid var(--color-divider);
+  background: var(--color-bg);
+  font: inherit;
+  font-size: var(--text-table);
+  padding: 3px 6px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+}
+.numin:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+.why {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--color-divider);
+  background: var(--color-bg);
+  font: inherit;
+  font-size: var(--text-small);
+  line-height: 1.45;
+  padding: 6px 8px;
+  color: var(--color-neutral-800);
+}
+.why:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+.sel {
+  border: 1px solid var(--color-divider);
+  background: var(--color-bg);
+  font: inherit;
+  font-size: var(--text-table);
+  padding: 3px 6px;
+  color: inherit;
+  border-radius: 0;
+}
+.sel:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-accent);
+}
+/* — cross table: heat is ink, never accent — */
+.pv {
+  width: 100%;
+  border-collapse: collapse;
+}
+.pv td,
+.pv th {
+  padding: 5px 10px;
+  font-size: var(--text-small);
+}
+.pv th {
+  font-size: var(--text-rung);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+}
+.pv th.l,
+.pv td.l {
+  text-align: left;
+}
+.pv td.n {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.pv td.n:hover {
+  box-shadow: inset 0 0 0 2px var(--color-accent);
+}
+.pv tr.grp > td {
+  border-top: var(--rule-hair);
+  font-weight: 600;
+  background: var(--surface-subgroup);
+}
+.pv tr.sub > td {
+  color: var(--text-secondary);
+}
+.pv tr.tot > td {
+  border-top: var(--rule-strong);
+  font-weight: 600;
+}
+.pv .zero {
+  color: var(--text-disabled);
+}
+.h1c {
+  background: var(--heat-1);
+}
+.h2c {
+  background: var(--heat-2);
+}
+.h3c {
+  background: var(--heat-3);
+}
+.h4c {
+  background: var(--heat-4);
+}
+.h5c {
+  background: var(--heat-5);
+}
+/* — plain data tables — */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-table);
+}
+.tbl th {
+  text-align: left;
+  font-size: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  padding: 6px var(--space-3);
+  border-bottom: var(--rule-strong);
+  white-space: nowrap;
+}
+.tbl td {
+  padding: 6px var(--space-3);
+  border-bottom: var(--rule-hair);
+  vertical-align: top;
+}
+.tbl tr:hover > td {
+  background: var(--surface-hover);
+}
+.r {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* — range bar — */
+.rangebar {
+  position: relative;
+  height: 10px;
+  background: var(--range-track);
+}
+.rangebar .fl {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--range-likely);
+}
+.rangebar .ft {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  background: var(--range-tail);
+}
+.rangebar .tk {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--range-tick);
+}
+.rangecaps {
+  position: relative;
+  height: 15px;
+  font-size: var(--text-label);
+  color: var(--text-tertiary);
+}
+/* — scenario board — */
+.scen {
+  width: 100%;
+  border-collapse: collapse;
+}
+.scen th {
+  vertical-align: top;
+  text-align: left;
+}
+.scen td,
+.scen th {
+  padding: 7px 12px;
+  border-left: var(--rule-hair);
+}
+.scen td:first-child,
+.scen th:first-child {
+  border-left: 0;
+}
+.scen tbody tr {
+  border-top: var(--rule-hair);
+}
+.scen .v {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-table);
+}
+.sbar {
+  position: relative;
+  height: 12px;
+  background: var(--range-track);
+}
+.sbar .p80 {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--color-neutral-400);
+}
+.sbar .lk {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--color-text);
+}
+/* — rationale panel — */
+.rung {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--color-divider);
+  background: color-mix(in srgb, var(--color-text) 3%, transparent);
+}
+.rung.chosen {
+  border-left-color: var(--color-accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

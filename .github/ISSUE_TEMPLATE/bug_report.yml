@@ -1,0 +1,45 @@
+name: Bug report
+description: A number looks wrong, or something does not work
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A figure that looks wrong is much easier to diagnose with the estimate
+        that produced it. **Data → Export JSON** contains only what you typed —
+        no telemetry, no identifiers.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, and what the tool did instead of what you expected.
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: If it is a figure, say what you believe it should be and why.
+    validations: { required: true }
+  - type: textarea
+    id: estimate
+    attributes:
+      label: The estimate (optional)
+      description: Paste or attach the exported JSON, trimmed to what reproduces it.
+      render: json
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: v0.1.0, or the commit SHA
+    validations: { required: true }
+  - type: dropdown
+    id: how
+    attributes:
+      label: How are you running it
+      options: [Docker image, docker compose, npm run dev, static build, GitHub Pages]
+    validations: { required: true }
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Firefox 133 on Ubuntu 24.04

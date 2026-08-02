@@ -1,0 +1,36 @@
+name: Change to the estimation method
+description: Propose a different way of computing days
+labels: [method]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Changes to how days are computed are welcome and held to a higher bar
+        than interface changes. The current method is written down in
+        `docs/estimation-method.md` precisely so it can be argued with.
+  - type: textarea
+    id: current
+    attributes:
+      label: What the current behaviour gets wrong
+      description: A worked example with numbers, please.
+    validations: { required: true }
+  - type: textarea
+    id: proposed
+    attributes:
+      label: What it should do instead
+      description: The formula or the rule, and the same example recomputed.
+    validations: { required: true }
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Delivery data, a paper, or the reasoning that convinced you.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: This does not reintroduce money into the tool
+          required: true
+        - label: Confidence still widens the range without moving the mean
+          required: true

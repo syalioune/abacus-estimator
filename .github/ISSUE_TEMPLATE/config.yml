@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or discussion
+    url: https://github.com/syalioune/abacus-estimator/discussions
+    about: Ask about the method, calibration, or how to use the tool.
+  - name: Security vulnerability
+    url: https://github.com/syalioune/abacus-estimator/security/advisories/new
+    about: Report privately, not as a public issue.

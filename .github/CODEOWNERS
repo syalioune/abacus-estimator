@@ -1,0 +1,5 @@
+# The estimation rules and the schema are the parts that must not drift.
+/src/domain/   @syalioune
+/src/state/    @syalioune
+/docs/estimation-method.md  @syalioune
+/AGENTS.md     @syalioune
