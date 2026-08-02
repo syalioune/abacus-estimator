@@ -3,7 +3,7 @@
 # ---- build ------------------------------------------------------------------
 # Pinned to a digest-free but explicit minor so rebuilds are reproducible enough
 # for a static site while still receiving patch fixes.
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 
 # Dependencies first: this layer is cached until the lockfile actually changes.
