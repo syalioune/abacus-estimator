@@ -19,7 +19,7 @@ RUN npm run build
 # ---- runtime ----------------------------------------------------------------
 # nginx-unprivileged listens on 8080 as a non-root user, so the container needs
 # no capabilities and can run read-only under a restrictive PodSecurity policy.
-FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.31-alpine AS runtime
 
 LABEL org.opencontainers.image.title="Abacus" \
       org.opencontainers.image.description="Software estimation in man-days: complexity ladders, PERT ranges, scenarios." \
