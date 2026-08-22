@@ -9,6 +9,11 @@ List the work as items of five kinds — **Feature**, **API**, **Flow**, **Batch
 **Screen** — and attach each to a **component**. A component holds no effort of
 its own; it is a container, and its figure is the roll-up of what is in it.
 
+A **Flow** is anything that leaves the component without a caller waiting on the
+answer: a file, a data export, or an asynchronous event on a topic. The ladder
+names all three at every rung, so a published event is sized as the exchange it
+is rather than borrowed from the API ladder.
+
 APIs carry a **direction**. An interface you _consume_ is cheaper than one you
 _expose_: the contract already exists, nobody depends on your version, and you
 break nobody. That is a separate ladder rather than a coefficient, so both

@@ -29,7 +29,8 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Data" }));
     await user.click(screen.getByRole("button", { name: "Load example" }));
     await user.click(screen.getByRole("button", { name: "Backlog" }));
-    expect(screen.getAllByDisplayValue("order-service").some((el) => el.tagName === "INPUT")).toBe(true);
+    // The component name is editable in place, and it wraps rather than crops.
+    expect(screen.getAllByDisplayValue("order-service").some((el) => el.tagName === "TEXTAREA")).toBe(true);
     // The header must show a P80 the moment there is work to price.
     expect(screen.getByText("Total, P80")).toBeTruthy();
   });
@@ -69,6 +70,47 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "close" }));
     await user.click(screen.getByRole("button", { name: "Component" }));
     expect(await screen.findByPlaceholderText("order-service")).toBeTruthy();
+  });
+
+  it("says what each item is, not only what it could be", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await user.click(screen.getByRole("button", { name: "Data" }));
+    await user.click(screen.getByRole("button", { name: "Load example" }));
+    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    const readouts = [...document.querySelectorAll(".picked")].map((el) => el.textContent);
+    expect(readouts.some((t) => /^Complexity/.test(t))).toBe(true);
+    expect(readouts.some((t) => /^Confidence/.test(t))).toBe(true);
+    // The words, not the letters: "Complex", not the highlighted rung alone.
+    expect(readouts.some((t) => t.includes("Very complex"))).toBe(true);
+  });
+
+  it("moves an existing item to another lot from the backlog", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await user.click(screen.getByRole("button", { name: "Data" }));
+    await user.click(screen.getByRole("button", { name: "Load example" }));
+    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    const [lotSel] = screen.getAllByTitle(/Move this item to another lot/);
+    const target = [...lotSel.options].find((o) => o.textContent !== lotSel.selectedOptions[0].textContent);
+    await user.selectOptions(lotSel, target.value);
+    expect(screen.getAllByTitle(/Move this item to another lot/)[0].value).toBe(target.value);
+  });
+
+  it("shows the landscape as a tree on Home", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await user.click(screen.getByRole("button", { name: "Data" }));
+    await user.click(screen.getByRole("button", { name: "Load example" }));
+    await user.click(screen.getByRole("button", { name: "Home" }));
+    expect(screen.getByText("Landscape")).toBeTruthy();
+    expect(screen.getByText("Backend")).toBeTruthy();
+    expect(screen.getByText("order-service")).toBeTruthy();
+    expect(screen.getByText("Option A — Analytics")).toBeTruthy();
+    expect(screen.getAllByText(/Baseline/).length).toBeGreaterThan(0);
   });
 
   it("shows rung words, never day counts, on the ladder", async () => {

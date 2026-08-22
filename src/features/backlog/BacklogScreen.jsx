@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { CONF, DIRS, TYPES, scaleKeyOf } from "../../domain/index.js";
-import { Btn, Chip, ConfirmModal, Eyebrow, MiniBtn, NumInput, Select, TagInput } from "../../ui/primitives.jsx";
+import { CONF, CONF_BY_ID, DIRS, LEVEL_BY_ID, TYPES, scaleKeyOf } from "../../domain/index.js";
+import { Btn, Chip, ConfirmModal, Eyebrow, GrowText, MiniBtn, NumInput, Select, TagInput } from "../../ui/primitives.jsx";
 import { ConfDot, ConfPicker, Ladder, MixBar } from "../../ui/estimating.jsx";
 import { fmt } from "../../ui/format.js";
 import { IconComment, IconCopy, IconPlus, IconTrash } from "../../ui/icons.jsx";
@@ -16,6 +16,7 @@ export function Backlog({
   components,
   compName,
   subsystems,
+  lots,
   scales,
   spreads,
   levelLabels,
@@ -122,22 +123,30 @@ export function Backlog({
     setClosedSections(new Set());
   };
 
+  /* The lot only becomes a choice once there is a second one to move an item to. */
+  const showLot = !shop && lots.length > 1;
+
   /* Column budget. Workshop drops direction, lot and the range: same table,
      same state, same widgets — only the type and the targets grow. */
   const cols = [
-    "minmax(200px, 1fr)",
+    "minmax(210px, 1fr)",
     shop ? "170px" : null,
-    "150px",
-    shop ? null : "78px",
-    shop ? "minmax(220px, 1fr)" : "300px",
-    shop ? "150px" : "108px",
-    "54px",
-    blind ? null : "76px",
-    blind || shop ? null : "92px",
-    "132px",
+    "148px",
+    showLot ? "148px" : null,
+    shop ? null : "76px",
+    shop ? "minmax(220px, 1fr)" : "292px",
+    shop ? "150px" : "110px",
+    shop ? "64px" : "54px",
+    blind ? null : "74px",
+    blind || shop ? null : "90px",
+    "104px",
   ]
     .filter(Boolean)
     .join(" ");
+
+  /* One depth ladder for the whole room: subsystem, component, kind of work,
+     item. Without declared subsystems the whole table climbs one step. */
+  const compDepth = useSubsystemGrouping ? 1 : 0;
 
   const sel = items.find((i) => i.id === selected) || items[0] || null;
 
@@ -151,30 +160,23 @@ export function Backlog({
         className="row"
         style={{
           gridTemplateColumns: cols,
+          "--depth": compDepth + 2,
           background: on ? "var(--surface-subgroup)" : shop && it.reviewed ? "var(--heat-2)" : undefined,
         }}
       >
-        <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-          <input
-            value={it.name}
-            onFocus={() => setSelected(it.id)}
-            onChange={(e) => onUpd(it.id, { name: e.target.value })}
-            style={{ width: "100%", background: "transparent", border: 0, padding: 0, font: "inherit", color: "inherit" }}
-          />
+        <span onFocus={() => setSelected(it.id)} style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+          <GrowText value={it.name} onChange={(v) => onUpd(it.id, { name: v })} label="Item name" />
           <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <IconComment style={{ color: "var(--text-tertiary)", flex: "none" }} title="Rationale" />
             <input
               value={it.note || ""}
-              onFocus={() => setSelected(it.id)}
               onChange={(e) => onUpd(it.id, { note: e.target.value })}
               placeholder="Add rationale for this level…"
               className="sm"
               style={{ flex: 1, minWidth: 0, background: "transparent", border: 0, padding: 0, font: "inherit" }}
             />
           </span>
-          <span onFocus={() => setSelected(it.id)}>
-            <TagInput value={it.tags || []} onChange={(tags) => onUpd(it.id, { tags })} />
-          </span>
+          <TagInput value={it.tags || []} onChange={(tags) => onUpd(it.id, { tags })} />
         </span>
 
         {shop && (
@@ -204,6 +206,25 @@ export function Backlog({
           </Select>
         </span>
 
+        {/* An item belongs to exactly one lot, and which one is a scoping decision
+            that keeps moving — so it is editable here, not only at creation. */}
+        {showLot && (
+          <span className="c-lot">
+            <Select
+              value={it.lotId}
+              onChange={(v) => onUpd(it.id, { lotId: v })}
+              style={{ width: "100%" }}
+              title="Move this item to another lot — it changes which scenarios include it"
+            >
+              {lots.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+          </span>
+        )}
+
         {!shop && (
           <span className="c-dir">
             {it.type === "API" ? (
@@ -230,7 +251,9 @@ export function Backlog({
           </span>
         )}
 
-        <span onFocus={() => setSelected(it.id)}>
+        {/* The pickers show what you could choose; the line under each says what
+            this item is, so a row is readable without decoding a highlight. */}
+        <span onFocus={() => setSelected(it.id)} style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
           <Ladder
             scale={scales[scaleKeyOf(it)]}
             value={it.level}
@@ -241,9 +264,13 @@ export function Backlog({
               onUpd(it.id, { level: l });
             }}
           />
+          <span className="picked">
+            Complexity
+            <span className="v">{levelLabels[it.level] ?? LEVEL_BY_ID[it.level]?.label ?? it.level}</span>
+          </span>
         </span>
 
-        <span onFocus={() => setSelected(it.id)}>
+        <span onFocus={() => setSelected(it.id)} style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
           <ConfPicker
             value={it.confidence}
             onChange={(v) => {
@@ -252,6 +279,13 @@ export function Backlog({
             }}
             spreads={spreads}
           />
+          <span
+            className="picked"
+            title="Confidence widens or narrows the range around the figure — it never moves the figure itself. Low confidence is the risk to argue about."
+          >
+            Confidence
+            <span className={"v " + it.confidence}>{CONF_BY_ID[it.confidence]?.label ?? it.confidence}</span>
+          </span>
         </span>
 
         <span className="r">
@@ -302,7 +336,7 @@ export function Backlog({
         : [{ key: "all", type: null, rows: g.rows }];
     return (
       <React.Fragment key={g.key}>
-        <div className="grouphd">
+        <div className="grouphd" style={{ "--depth": compDepth }}>
           <button
             type="button"
             onClick={() => toggleGroup(g.key)}
@@ -312,25 +346,24 @@ export function Backlog({
           >
             {closedGroups.has(g.key) ? "▸" : "▾"}
           </button>
+          <span className="mono-lbl" style={{ flex: "none" }}>
+            {groupBy === "component" ? "Component" : "Kind"}
+          </span>
           {groupBy === "component" && g.component ? (
             <>
-              <input
-                value={g.component.name}
-                onChange={(e) => onUpdComponent(g.component.id, { name: e.target.value })}
-                className="ttl"
-                style={{
-                  flex: "none",
-                  width: 220,
-                  background: "transparent",
-                  border: 0,
-                  padding: 0,
-                  fontSize: "var(--text-subtitle)",
-                  color: "inherit",
-                }}
-              />
+              <span style={{ flex: "1 1 240px", minWidth: 0 }}>
+                <GrowText
+                  value={g.component.name}
+                  onChange={(v) => onUpdComponent(g.component.id, { name: v })}
+                  label="Component name"
+                  className="ttl"
+                  style={{ fontSize: "var(--text-subtitle)" }}
+                />
+              </span>
               <Select
                 value={g.component.subsystemId || ""}
                 onChange={(v) => onUpdComponent(g.component.id, { subsystemId: v || null })}
+                title="Move this component to another subsystem"
               >
                 <option value="">No subsystem</option>
                 {subsystems.map((x) => (
@@ -341,7 +374,7 @@ export function Backlog({
               </Select>
             </>
           ) : (
-            <span className="ttl" style={{ fontSize: "var(--text-subtitle)" }}>
+            <span className="ttl" style={{ flex: "1 1 240px", minWidth: 0, fontSize: "var(--text-subtitle)" }}>
               {groupBy === "component" ? "Unassigned" : g.type.plural}
             </span>
           )}
@@ -419,13 +452,14 @@ export function Backlog({
             <MiniBtn
               danger
               icon={<IconTrash />}
+              title={`Delete the component ${g.component.name} — its items become unassigned`}
               onClick={() =>
                 askConfirm(`Delete ${g.component.name}? Its ${g.rows.length} items become unassigned.`, () =>
                   onDelComponent(g.component.id),
                 )
               }
             >
-              delete component
+              delete
             </MiniBtn>
           )}
           {groupBy === "component" && !blind && gDays > 0 && (
@@ -442,7 +476,14 @@ export function Backlog({
         </div>
 
         {closedGroups.has(g.key) ? null : g.rows.length === 0 ? (
-          <div className="sm" style={{ padding: "var(--space-3) var(--gutter)", borderBottom: "var(--rule-hair)" }}>
+          <div
+            className="sm"
+            style={{
+              padding: "var(--space-3) var(--gutter)",
+              paddingLeft: `calc(var(--gutter) + ${compDepth + 2} * var(--indent-step))`,
+              borderBottom: "var(--rule-hair)",
+            }}
+          >
             Nothing attached yet. Add a feature, an API, a flow, a batch or a screen above.
           </div>
         ) : (
@@ -452,7 +493,7 @@ export function Backlog({
             return (
               <React.Fragment key={sec.key}>
                 {sec.type && (
-                  <div className="typehd">
+                  <div className="typehd" style={{ "--depth": compDepth + 1 }}>
                     <button
                       type="button"
                       onClick={() => toggleSection(secKey)}
@@ -616,7 +657,7 @@ export function Backlog({
                 const subDays = sum(b.groups.flatMap((g) => g.rows));
                 return (
                   <React.Fragment key={b.key}>
-                    <div className="subhd">
+                    <div className="subhd" style={{ "--depth": 0 }}>
                       <button
                         type="button"
                         onClick={() => toggleSubsystem(b.key)}
@@ -626,7 +667,10 @@ export function Backlog({
                       >
                         {subClosed ? "▸" : "▾"}
                       </button>
-                      <span className="ttl" style={{ fontSize: "var(--text-title)" }}>
+                      <span className="mono-lbl" style={{ flex: "none" }}>
+                        Subsystem
+                      </span>
+                      <span className="ttl" style={{ flex: "1 1 240px", minWidth: 0, fontSize: "var(--text-title)" }}>
                         {b.subsystem ? b.subsystem.name : "No subsystem"}
                       </span>
                       <span className="num sm">

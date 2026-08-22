@@ -105,6 +105,41 @@ export function TagInput({ value = [], onChange, placeholder = "add a tag…" })
   );
 }
 
+/* A name is never worth cropping. This grows downwards instead of scrolling
+   sideways, so a long title wraps and stays whole while you edit it. Enter
+   commits rather than opening a second line: these are names, not prose. */
+export function GrowText({ value, onChange, className, style, title, label, placeholder }) {
+  const ref = useRef(null);
+  const fit = (el) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  useEffect(() => fit(ref.current), [value]);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      title={title}
+      aria-label={label}
+      placeholder={placeholder}
+      spellCheck={false}
+      onChange={(e) => {
+        fit(e.target);
+        onChange(e.target.value);
+      }}
+      onKeyDown={(e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        e.currentTarget.blur();
+      }}
+      className={"growtext" + (className ? " " + className : "")}
+      style={style}
+    />
+  );
+}
+
 export const Select = ({ value, onChange, children, style, title }) => (
   <select value={value} onChange={(e) => onChange(e.target.value)} className="sel" style={style} title={title}>
     {children}

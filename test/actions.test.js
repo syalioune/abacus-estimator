@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as A from "../src/state/actions.js";
 import { emptyEstimate } from "../src/domain/schema.js";
+import { itemsInScenario } from "../src/domain/estimate.js";
 
 const withItem = () => {
   const s = A.addComponent(emptyEstimate(), "svc");
@@ -74,6 +75,20 @@ describe("containers", () => {
     const out = A.removeSubsystem(s, s.subsystems[0].id);
     expect(out.components).toHaveLength(1);
     expect(out.components[0].subsystemId).toBeNull();
+  });
+
+  it("moves an item to another lot, and it leaves the scenarios that lot is out of", () => {
+    let s = A.addLot(emptyEstimate(), "Option A");
+    const [core, optional] = s.lots.map((l) => l.id);
+    s = A.addItem(s, { type: "API", name: "POST /orders" });
+    const item = s.items[0].id;
+    expect(itemsInScenario(s, s.scenarios[0].id)).toHaveLength(1);
+
+    const out = A.updateItem(s, item, { lotId: optional });
+    expect(out.items[0].lotId).toBe(optional);
+    expect(out.items.filter((i) => i.lotId === core)).toHaveLength(0);
+    // The baseline scenario holds the core lot only, so the item has left it.
+    expect(itemsInScenario(out, out.scenarios[0].id)).toHaveLength(0);
   });
 
   it("refuses to delete the last lot", () => {

@@ -1,7 +1,21 @@
 import { CONF, CONF_BY_ID, DIR_BY_ID, DIRS, LEVEL_BY_ID, LEVELS, SCALE_KEYS, TYPE_BY_ID, TYPES } from "./taxonomy.js";
 import { DEFAULT_MUT, DEFAULT_RATIOS, DEFAULT_SCALES, DEFAULT_SPREADS } from "./defaults.js";
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
+
+/**
+ * The Flow rungs as they shipped up to v5, before asynchronous events were
+ * named in them. A stored rung still carrying this exact prose was never
+ * argued with, so it is safe to refresh; any other wording is the team's own
+ * and is left untouched.
+ */
+const V5_FLOW_WHY = {
+  S: "One file, one direction, format already agreed. Deposited and collected on an existing transport, field mapping only.",
+  M: "Format to specify or a real transformation. Naming and scheduling conventions, functional acknowledgement, reject file.",
+  C: "Several files with a functional dependency between them, restartable and replayable, volume that forces streaming over a full load.",
+  V: "New transport or new partner: connectivity, key exchange, reference data alignment, reconciliation and repair procedure.",
+  X: "New exchange framework or normative format. Interoperability campaign with the third party before go-live.",
+};
 
 export const uid = () => Math.random().toString(36).slice(2, 9);
 
@@ -32,6 +46,8 @@ export const emptyEstimate = () => ({
  *       APIs gain a direction and the single API scale becomes API_EXPOSED.
  *  v4 → day rate and currency removed; this tool estimates effort only.
  *  v5 → an item's single free-text tag becomes a list of tags.
+ *  v6 → Flow covers asynchronous events as well as files; the shipped rung
+ *       rationales say so, unless the team has rewritten them.
  */
 export function migrate(raw) {
   const s = { ...emptyEstimate(), ...raw };
@@ -94,6 +110,14 @@ export function migrate(raw) {
     SCALE_KEYS.map(({ key }) => [key, s.scales?.[key] || (key === "API_EXPOSED" && oldApi) || DEFAULT_SCALES[key]]),
   );
   s.mut = Object.fromEntries(SCALE_KEYS.map(({ key }) => [key, { ...DEFAULT_MUT[key], ...(s.mut?.[key] || {}) }]));
+
+  // v6: a published topic is a flow, not an API. Say so on the rungs nobody rewrote.
+  s.scales.FLOW = Object.fromEntries(
+    Object.entries(s.scales.FLOW).map(([level, rung]) => [
+      level,
+      rung?.why === V5_FLOW_WHY[level] ? { ...rung, why: DEFAULT_SCALES.FLOW[level].why } : rung,
+    ]),
+  );
 
   // v4: this tool estimates effort, not money.
   delete s.rate;

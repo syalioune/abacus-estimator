@@ -64,7 +64,7 @@ body,
   --space-5: 20px;
   --space-6: 24px;
   --space-7: 32px;
-  --row-indent: 34px;
+  --indent-step: 18px;
   --gutter: var(--space-6);
   --conf-high-bg: oklch(0.945 0.045 152);
   --conf-high-bd: oklch(0.8 0.095 152);
@@ -444,20 +444,46 @@ p {
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-/* — backlog bands and rows; two postures, same table — */
+/* — backlog bands and rows; two postures, same table.
+   Depth is drawn three ways at once: each level steps further in, sits on a
+   lighter ground than its parent, and carries a rail down its own left edge.
+   Consecutive bands of one level join their rails into a continuous line, so a
+   component still reads as a child of its subsystem when everything is
+   expanded and the collapse arrow is ten rows away. */
 .backlog {
   font-size: var(--text-prose);
   overflow-x: auto;
+}
+.subhd,
+.grouphd,
+.typehd,
+.row {
+  position: relative;
+  padding-left: calc(var(--gutter) + var(--depth, 0) * var(--indent-step));
+}
+.grouphd::before,
+.typehd::before,
+.row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--gutter) + var(--depth, 0) * var(--indent-step) - var(--indent-step) + 5px);
+  width: 2px;
+  background: var(--rail, var(--color-neutral-400));
 }
 .grouphd {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--gutter);
+  padding-top: var(--space-3);
+  padding-right: var(--gutter);
+  padding-bottom: var(--space-3);
   background: var(--surface-group);
   border-top: var(--rule-strong);
   border-bottom: var(--rule-hair);
+  --rail: var(--color-neutral-600);
 }
 /* — subsystem band: one level above the component, so it carries the heavier rule. — */
 .subhd {
@@ -465,7 +491,9 @@ p {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--gutter);
+  padding-top: var(--space-3);
+  padding-right: var(--gutter);
+  padding-bottom: var(--space-3);
   background: var(--color-neutral-200);
   border-top: 3px solid var(--color-text);
   border-bottom: var(--rule-hair);
@@ -474,16 +502,22 @@ p {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 5px var(--gutter) 5px var(--row-indent);
+  padding-top: 5px;
+  padding-right: var(--gutter);
+  padding-bottom: 5px;
   background: var(--surface-subgroup);
   border-bottom: var(--rule-hair);
+  --rail: var(--color-neutral-500);
 }
 .row {
   display: grid;
   align-items: center;
   gap: var(--space-2);
-  padding: 6px var(--gutter) 6px var(--row-indent);
+  padding-top: 6px;
+  padding-right: var(--gutter);
+  padding-bottom: 6px;
   border-bottom: var(--rule-hair);
+  --rail: var(--color-neutral-300);
 }
 .row:hover {
   background: var(--surface-hover);
@@ -515,6 +549,86 @@ p {
   padding-bottom: 10px;
 }
 /* — inline editors — */
+/* A name grows downwards rather than scrolling sideways: a long title wraps and
+   stays whole while you edit it. field-sizing does this natively where it
+   exists; the height written from scrollHeight covers every other browser. */
+.growtext {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 1.2em;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  resize: none;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  field-sizing: content;
+}
+.growtext:focus {
+  outline: none;
+  box-shadow: 0 1px 0 0 var(--color-accent);
+}
+/* — what this item is, said in words on the row: the pickers show what you could
+   choose, these say what you did. Confidence keeps its hue, and its word. — */
+.picked {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 3px;
+  font-size: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  line-height: 1.2;
+}
+.picked .v {
+  font-size: var(--text-small);
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--color-text);
+}
+.picked .v.H {
+  color: var(--conf-high-fg);
+}
+.picked .v.M {
+  color: var(--conf-med-fg);
+}
+.picked .v.L {
+  color: var(--conf-low-fg);
+}
+/* — the landscape tree: containers and their names, no figures. Same depth
+   language as the backlog, so the two rooms read as one structure. — */
+.tree-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 6px var(--gutter);
+  padding-left: calc(var(--gutter) + var(--depth, 0) * var(--indent-step));
+  border-bottom: var(--rule-hair);
+}
+.tree-row:last-child {
+  border-bottom: 0;
+}
+.tree-row.parent {
+  background: var(--surface-group);
+  border-top: var(--rule-strong);
+}
+.tree-row.child::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--gutter) + var(--depth, 0) * var(--indent-step) - var(--indent-step) + 5px);
+  width: 2px;
+  background: var(--color-neutral-400);
+}
 .mini {
   width: 100%;
   border: 0;

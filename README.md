@@ -32,14 +32,15 @@ decision follows from that:
 
 ## What it does
 
-| Room            | What it is for                                                                                                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Backlog**     | Components → kind sections → items. Ladder, confidence, direction, quantity, and the rationale panel you read out loud when the room disagrees. |
-| **Abacus**      | The six ladders, the confidence spreads, and the mutualisation policy. Edit a rung's days and everything re-prices.                             |
-| **Cross table** | Rows × columns × measure over eight dimensions, with ink heat and drill-down to the underlying items.                                           |
-| **Scenarios**   | Lots and scenarios side by side, with Δ against a baseline. An option is sized once and reused in every combination.                            |
-| **Effort**      | The ratio cascade, the five-number range, the distribution it comes from, and an elapsed-time sanity check.                                     |
-| **Data**        | JSON round-trip, CSV in and out, the example project.                                                                                           |
+| Room            | What it is for                                                                                                                                       |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Home**        | Where the estimate stands, and the landscape as a tree: subsystems and their components, the lots, the scenarios and what each one includes.         |
+| **Backlog**     | Components → kind sections → items. Ladder, confidence, direction, lot, quantity, and the rationale panel you read out loud when the room disagrees. |
+| **Abacus**      | The six ladders, the confidence spreads, and the mutualisation policy. Edit a rung's days and everything re-prices.                                  |
+| **Cross table** | Rows × columns × measure over eight dimensions, with ink heat and drill-down to the underlying items.                                                |
+| **Scenarios**   | Lots and scenarios side by side, with Δ against a baseline. An option is sized once and reused in every combination.                                 |
+| **Effort**      | The ratio cascade, the five-number range, the distribution it comes from, and an elapsed-time sanity check.                                          |
+| **Data**        | JSON round-trip, CSV in and out, the example project.                                                                                                |
 
 ### Five kinds of work
 
@@ -47,6 +48,11 @@ decision follows from that:
 direction: an interface you **consume** is cheaper than one you **expose**,
 because the contract already exists and nobody depends on your version of it.
 That is a different ladder, not a coefficient — 2/3/5/8/21 against 3/5/8/13/50.
+
+`Flow` covers **asynchronous events** as well as files: a published topic and a
+nightly export are the same kind of work — something leaves the component and
+lands elsewhere with nobody waiting on the answer. Every rung of the Flow ladder
+names both, so an event stream is never sized as an API by default.
 
 A **component holds no effort of its own.** It is a container; its cost is the
 roll-up of what is attached to it.
@@ -114,7 +120,7 @@ Also published to Docker Hub as `syalioune/abacus-estimator:latest`.
 ```bash
 npm install
 npm run dev       # http://localhost:5173
-npm test          # 88 tests, domain + smoke
+npm test          # 130 tests, domain + smoke
 npm run build     # static bundle in dist/
 ```
 
