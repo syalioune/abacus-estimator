@@ -154,6 +154,32 @@ describe("App", () => {
     expect(marks[1]).toBeLessThanOrEqual(marks[2]);
   });
 
+  it("says why the range collapsed when a confidence level carries no spread", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+
+    // One item, medium confidence by default.
+    await user.click(screen.getByRole("button", { name: "Item" }));
+    await user.type(await screen.findByPlaceholderText(/Synchronous interface/), "POST /orders");
+    await user.click(screen.getByRole("button", { name: "Add item" }));
+    await user.click(screen.getByRole("button", { name: "close" }));
+
+    // Flatten that level's spread: min = max means σ 0.
+    await user.click(screen.getByRole("button", { name: "Abacus" }));
+    const row = document.querySelector(".pill.M").closest("tr");
+    const [minIn, maxIn] = row.querySelectorAll("input.numin");
+    await user.clear(minIn);
+    await user.type(minIn, "1");
+    await user.clear(maxIn);
+    await user.type(maxIn, "1");
+    expect(row.textContent).toMatch(/No range/);
+
+    // The Effort room explains the five identical figures rather than printing them bare.
+    await user.click(screen.getByRole("button", { name: "Effort" }));
+    expect(screen.getByText(/every confidence level in scope carries min = max/)).toBeTruthy();
+  });
+
   it("shades the curve up to the P80, not past it", async () => {
     const user = userEvent.setup();
     render(<App />);

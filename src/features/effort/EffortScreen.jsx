@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { TYPES } from "../../domain/index.js";
+import { CONF_BY_ID, TYPES } from "../../domain/index.js";
 import { Btn, Cell, Eyebrow, Chip, MiniBtn, NumInput, Select } from "../../ui/primitives.jsx";
 import { PertCurve, RangeBar } from "../../ui/estimating.jsx";
 import { IconPlus, IconTrash } from "../../ui/icons.jsx";
@@ -46,6 +46,15 @@ export function Effort({
   const otherDays = ratioLines.total - scopeDays;
   const months = team > 0 ? ratioLines.total / (team * 18) : 0;
   const bufferOn = ratioLines.lines.some((r) => r.on && /buffer|risk|contingen|aléa|alea/i.test(r.label));
+
+  /* Five identical figures are not a range, and the reason is always the same:
+     the confidence levels in scope carry min = max, so σ is zero. Say it here,
+     where the reader is looking at the collapsed table. */
+  const flatConf = Array.from(new Set(scopeItems.map((i) => i.confidence)))
+    .map((id) => ({ id, sp: spreads[id] || spreads.M }))
+    .filter(({ sp }) => sp.min === sp.max);
+  const flatRange = scopeDays > 0 && scopePert.max - scopePert.min < 1e-9;
+  const noDays = scopeItems.length > 0 && scopeDays === 0;
 
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "var(--gutter)" }}>
@@ -257,6 +266,26 @@ export function Effort({
             Development figures carried through the same ratio factor of ×{ratioLines.factor.toFixed(2)}, so the range covers the
             whole project and not just the build.
           </p>
+          {noDays && (
+            <p
+              className="sm"
+              style={{ marginTop: 8, borderLeft: "3px solid var(--conf-med-bd)", paddingLeft: 10, color: "var(--conf-med-fg)" }}
+            >
+              Every figure is zero because the rungs these {scopeItems.length} items sit on are worth 0 md. Set the days per rung
+              in the Abacus room before reading anything here.
+            </p>
+          )}
+          {flatRange && (
+            <p
+              className="sm"
+              style={{ marginTop: 8, borderLeft: "3px solid var(--conf-med-bd)", paddingLeft: 10, color: "var(--conf-med-fg)" }}
+            >
+              All five figures are the same because every confidence level in scope carries min = max
+              {flatConf.length ? ` (${flatConf.map((c) => `${CONF_BY_ID[c.id]?.label ?? c.id} ×${c.sp.min}`).join(", ")})` : ""},
+              so σ is zero and there is nothing for the P80 to add. Widen the multipliers in the Abacus room — even high
+              confidence is a range, not a promise.
+            </p>
+          )}
           {bufferOn && (
             <p
               className="sm"

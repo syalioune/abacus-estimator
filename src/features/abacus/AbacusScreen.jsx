@@ -110,10 +110,16 @@ export function Abacus({
                 </td>
                 <td className="r sm">
                   {fmt(10 * spreads[c.id].min)}–{fmt(10 * spreads[c.id].max)} md
-                  <div className="tert">
-                    E {fmt((10 * spreads[c.id].min + 40 + 10 * spreads[c.id].max) / 6)} · σ{" "}
-                    {fmt((10 * spreads[c.id].max - 10 * spreads[c.id].min) / 6)}
-                  </div>
+                  {/* min = max is a point estimate: σ is zero, so the P80 of a
+                      project made only of this level equals its likely figure. */}
+                  {spreads[c.id].min === spreads[c.id].max ? (
+                    <div style={{ color: "var(--conf-med-fg)" }}>No range: σ 0, P80 = likely</div>
+                  ) : (
+                    <div className="tert">
+                      E {fmt((10 * spreads[c.id].min + 40 + 10 * spreads[c.id].max) / 6)} · σ{" "}
+                      {fmt((10 * spreads[c.id].max - 10 * spreads[c.id].min) / 6)}
+                    </div>
+                  )}
                 </td>
                 <td className="r sm">{items.filter((i) => i.confidence === c.id).length || "—"}</td>
               </tr>
