@@ -7,6 +7,15 @@ import App from "../src/App.jsx";
 describe("App", () => {
   beforeEach(() => window.localStorage.clear());
 
+  /* The backlog opens collapsed, so anything that argues about rows opens it
+     first — the same button a user reaches for. */
+  const openBacklog = async (user) => {
+    await user.click(screen.getByRole("button", { name: "Data" }));
+    await user.click(screen.getByRole("button", { name: "Load example" }));
+    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    await user.click(screen.getByTitle("Expand every component and type band"));
+  };
+
   it("mounts with an empty estimate", async () => {
     render(<App />);
     expect(await screen.findByDisplayValue("New project")).toBeTruthy();
@@ -26,10 +35,9 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByDisplayValue("New project");
-    await user.click(screen.getByRole("button", { name: "Data" }));
-    await user.click(screen.getByRole("button", { name: "Load example" }));
-    await user.click(screen.getByRole("button", { name: "Backlog" }));
-    expect(screen.getAllByDisplayValue("order-service").some((el) => el.tagName === "INPUT")).toBe(true);
+    await openBacklog(user);
+    // The component name is editable in place, and it wraps rather than crops.
+    expect(screen.getAllByDisplayValue("order-service").some((el) => el.tagName === "TEXTAREA")).toBe(true);
     // The header must show a P80 the moment there is work to price.
     expect(screen.getByText("Total, P80")).toBeTruthy();
   });
@@ -38,9 +46,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByDisplayValue("New project");
-    await user.click(screen.getByRole("button", { name: "Data" }));
-    await user.click(screen.getByRole("button", { name: "Load example" }));
-    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    await openBacklog(user);
     await user.click(screen.getByRole("button", { name: /^Blind sizing/ }));
     expect(document.body.textContent).not.toMatch(/\d+\s*md/);
   });
@@ -49,14 +55,29 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByDisplayValue("New project");
-    await user.click(screen.getByRole("button", { name: "Data" }));
-    await user.click(screen.getByRole("button", { name: "Load example" }));
-    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    await openBacklog(user);
     await user.click(screen.getByRole("button", { name: "Workshop" }));
     const [markBtn] = screen.getAllByRole("button", { name: "mark reviewed" });
     await user.click(markBtn);
     expect(screen.getAllByRole("button", { name: "✓ reviewed" }).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/^\d+\/\d+ reviewed$/).length).toBeGreaterThan(0);
+  });
+
+  it("marks a whole band reviewed from its header, and unmarks it again", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await openBacklog(user);
+    await user.click(screen.getByRole("button", { name: "Workshop" }));
+
+    // The first band button belongs to the first component; its count follows it.
+    const [bandBtn] = screen.getAllByRole("button", { name: "mark all reviewed" });
+    await user.click(bandBtn);
+    expect(screen.getAllByText(/^(\d+)\/\1 reviewed$/).length).toBeGreaterThan(0);
+
+    const [undo] = screen.getAllByRole("button", { name: "unmark all" });
+    await user.click(undo);
+    expect(screen.getAllByRole("button", { name: "mark all reviewed" }).length).toBeGreaterThan(0);
   });
 
   it("lands on Home and opens the add modal on the right tab from its buttons", async () => {
@@ -71,21 +92,157 @@ describe("App", () => {
     expect(await screen.findByPlaceholderText("order-service")).toBeTruthy();
   });
 
-  it("shows rung words, never day counts, on the ladder", async () => {
+  it("says what each item is, not only what it could be", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await openBacklog(user);
+    const readouts = [...document.querySelectorAll(".picked")].map((el) => el.textContent);
+    expect(readouts.some((t) => /^Complexity/.test(t))).toBe(true);
+    expect(readouts.some((t) => /^Confidence/.test(t))).toBe(true);
+    // The words, not the letters: "Complex", not the highlighted rung alone.
+    expect(readouts.some((t) => t.includes("Very complex"))).toBe(true);
+  });
+
+  it("moves an existing item to another lot from the backlog", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await openBacklog(user);
+    const [lotSel] = screen.getAllByTitle(/Move this item to another lot/);
+    const target = [...lotSel.options].find((o) => o.textContent !== lotSel.selectedOptions[0].textContent);
+    await user.selectOptions(lotSel, target.value);
+    expect(screen.getAllByTitle(/Move this item to another lot/)[0].value).toBe(target.value);
+  });
+
+  it("shows the landscape as a tree on Home", async () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByDisplayValue("New project");
     await user.click(screen.getByRole("button", { name: "Data" }));
     await user.click(screen.getByRole("button", { name: "Load example" }));
-    await user.click(screen.getByRole("button", { name: "Backlog" }));
-    const rungs = document.querySelectorAll(".lad .seg-opt");
+    await user.click(screen.getByRole("button", { name: "Home" }));
+    expect(screen.getByText("Landscape")).toBeTruthy();
+    expect(screen.getByText("Backend")).toBeTruthy();
+    expect(screen.getByText("order-service")).toBeTruthy();
+    expect(screen.getByText("Option A — Analytics")).toBeTruthy();
+    expect(screen.getAllByText(/Baseline/).length).toBeGreaterThan(0);
+  });
+
+  it("draws the three-point range with every figure on it, none printed over another", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await user.click(screen.getByRole("button", { name: "Data" }));
+    await user.click(screen.getByRole("button", { name: "Load example" }));
+    await user.click(screen.getByRole("button", { name: "Effort" }));
+
+    const bar = document.querySelector(".rangebar");
+    expect(bar.textContent).toMatch(/Optimistic/);
+    expect(bar.textContent).toMatch(/Pessimistic/);
+    const caps = [...bar.querySelectorAll(".cap")];
+    expect(caps.map((c) => c.querySelector(".mono-lbl").textContent)).toEqual(["Likely", "P80", "Expected"]);
+    // Each caption carries its own figure, so the bar reads without the table.
+    expect(caps.every((c) => /\d/.test(c.querySelector(".v").textContent))).toBe(true);
+    // The two that share the upper side are kept apart.
+    const left = (c) => parseFloat(c.style.left);
+    expect(Math.abs(left(caps[1]) - left(caps[0]))).toBeGreaterThan(10);
+
+    // Marks stay where their figures fall: likely ≤ expected ≤ P80 along the bar.
+    const marks = [...bar.querySelectorAll(".mk")].map((m) => parseFloat(m.style.left));
+    expect(marks[0]).toBeLessThanOrEqual(marks[1]);
+    expect(marks[1]).toBeLessThanOrEqual(marks[2]);
+  });
+
+  it("says why the range collapsed when a confidence level carries no spread", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+
+    // One item, medium confidence by default.
+    await user.click(screen.getByRole("button", { name: "Item" }));
+    await user.type(await screen.findByPlaceholderText(/Synchronous interface/), "POST /orders");
+    await user.click(screen.getByRole("button", { name: "Add item" }));
+    await user.click(screen.getByRole("button", { name: "close" }));
+
+    // Flatten that level's spread: min = max means σ 0.
+    await user.click(screen.getByRole("button", { name: "Abacus" }));
+    const row = document.querySelector(".pill.M").closest("tr");
+    const [minIn, maxIn] = row.querySelectorAll("input.numin");
+    await user.clear(minIn);
+    await user.type(minIn, "1");
+    await user.clear(maxIn);
+    await user.type(maxIn, "1");
+    expect(row.textContent).toMatch(/No range/);
+
+    // The Effort room explains the five identical figures rather than printing them bare.
+    await user.click(screen.getByRole("button", { name: "Effort" }));
+    expect(screen.getByText(/every confidence level in scope carries min = max/)).toBeTruthy();
+  });
+
+  it("shades the curve up to the P80, not past it", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await user.click(screen.getByRole("button", { name: "Data" }));
+    await user.click(screen.getByRole("button", { name: "Load example" }));
+    await user.click(screen.getByRole("button", { name: "Effort" }));
+
+    const svg = document.querySelector("svg.pcurve");
+    const points = svg.querySelector("polygon.shade").getAttribute("points").trim().split(/\s+/);
+    const closingX = parseFloat(points[points.length - 1].split(",")[0]);
+    const p80X = parseFloat(svg.querySelector(".mk-p80 line").getAttribute("x1"));
+    // The shaded area is the 80% you commit to; closing it at the right-hand
+    // edge instead would shade the whole distribution.
+    expect(closingX).toBeCloseTo(p80X, 1);
+    expect(closingX).toBeLessThan(parseFloat(svg.querySelector(".axis").getAttribute("x2")));
+  });
+
+  it("shows rung initials in the dense row, and never a day count", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await openBacklog(user);
+    const rungs = [...document.querySelectorAll(".lad .seg-opt")];
     expect(rungs.length).toBeGreaterThan(0);
-    expect([...rungs].slice(0, 5).map((b) => b.textContent)).toEqual([
+    expect(rungs.slice(0, 5).map((b) => b.textContent)).toEqual(["S", "M", "C", "VC", "O"]);
+    // The word is never lost: it labels the control and the row says it in full.
+    expect(rungs.slice(0, 5).map((b) => b.getAttribute("aria-label"))).toEqual([
       "Simple",
       "Medium",
       "Complex",
       "Very complex",
       "Outstanding",
     ]);
+    expect(rungs.some((b) => /\d/.test(b.textContent))).toBe(false);
+  });
+
+  it("keeps the initials in the workshop, with the word still on the row", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await openBacklog(user);
+    await user.click(screen.getByRole("button", { name: "Workshop" }));
+    const rungs = [...document.querySelectorAll(".lad .seg-opt")];
+    expect(rungs.slice(0, 5).map((b) => b.textContent)).toEqual(["S", "M", "C", "VC", "O"]);
+    expect(rungs[3].getAttribute("aria-label")).toBe("Very complex");
+    const readouts = [...document.querySelectorAll(".picked")].map((el) => el.textContent);
+    expect(readouts.some((t) => t.includes("Very complex"))).toBe(true);
+  });
+
+  it("opens with every band collapsed, and expands on request", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await user.click(screen.getByRole("button", { name: "Data" }));
+    await user.click(screen.getByRole("button", { name: "Load example" }));
+    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    // Subsystem bands are there to be opened; nothing under them is rendered yet.
+    expect(screen.getAllByText("Backend").length).toBeGreaterThan(0);
+    expect(document.querySelectorAll(".row").length).toBe(0);
+    await user.click(screen.getByTitle("Expand every component and type band"));
+    expect(document.querySelectorAll(".row").length).toBeGreaterThan(0);
+    await user.click(screen.getByTitle("Collapse every component and type band"));
+    expect(document.querySelectorAll(".row").length).toBe(0);
   });
 });

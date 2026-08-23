@@ -69,26 +69,30 @@ export const DEFAULT_SCALES = {
       why: "Undocumented or uncooperative third party: reverse engineering, sandbox to obtain, certification campaign before production.",
     },
   },
+  /* A published topic and a nightly file are the same kind of work: something
+     leaves this component and lands somewhere else without a caller waiting.
+     The rungs name both, so an event stream is never sized as an API by
+     default. */
   FLOW: {
     S: {
       days: 3,
-      why: "One file, one direction, format already agreed. Deposited and collected on an existing transport, field mapping only.",
+      why: "One file or one event, one direction, schema already agreed. Existing transport or existing topic, field mapping only, order and duplicates carry no consequence.",
     },
     M: {
       days: 5,
-      why: "Format to specify or a real transformation. Naming and scheduling conventions, functional acknowledgement, reject file.",
+      why: "Format or event schema to specify, or a real transformation. Naming, scheduling or partitioning conventions, functional acknowledgement, reject file or dead-letter queue.",
     },
     C: {
       days: 8,
-      why: "Several files with a functional dependency between them, restartable and replayable, volume that forces streaming over a full load.",
+      why: "Several files or event types with a functional dependency between them, restartable and replayable, ordering or at-least-once duplicates to absorb, volume that forces streaming over a full load.",
     },
     V: {
       days: 13,
-      why: "New transport or new partner: connectivity, key exchange, reference data alignment, reconciliation and repair procedure.",
+      why: "New transport, broker or partner: connectivity, key exchange, schema registry and compatibility policy, reference data alignment, reconciliation and repair procedure.",
     },
     X: {
       days: 50,
-      why: "New exchange framework or normative format. Interoperability campaign with the third party before go-live.",
+      why: "New exchange framework, event backbone or normative format. Interoperability campaign with the third party before go-live.",
     },
   },
   BATCH: {

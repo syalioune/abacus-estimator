@@ -64,7 +64,7 @@ body,
   --space-5: 20px;
   --space-6: 24px;
   --space-7: 32px;
-  --row-indent: 34px;
+  --indent-step: 18px;
   --gutter: var(--space-6);
   --conf-high-bg: oklch(0.945 0.045 152);
   --conf-high-bd: oklch(0.8 0.095 152);
@@ -354,6 +354,14 @@ p {
   overflow-wrap: break-word;
   text-align: center;
 }
+/* Dense posture: the rung shows its initials and the row says the word
+   underneath, so the table keeps its own actions in view. */
+.lad.compact .seg-opt {
+  padding: 5px 4px;
+  font-size: var(--text-table);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
 /* — confidence: the one dimension carrying hue — */
 .conf .seg-opt {
   padding: 5px 9px;
@@ -444,20 +452,46 @@ p {
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-/* — backlog bands and rows; two postures, same table — */
+/* — backlog bands and rows; two postures, same table.
+   Depth is drawn three ways at once: each level steps further in, sits on a
+   lighter ground than its parent, and carries a rail down its own left edge.
+   Consecutive bands of one level join their rails into a continuous line, so a
+   component still reads as a child of its subsystem when everything is
+   expanded and the collapse arrow is ten rows away. */
 .backlog {
   font-size: var(--text-prose);
   overflow-x: auto;
+}
+.subhd,
+.grouphd,
+.typehd,
+.row {
+  position: relative;
+  padding-left: calc(var(--gutter) + var(--depth, 0) * var(--indent-step));
+}
+.grouphd::before,
+.typehd::before,
+.row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--gutter) + var(--depth, 0) * var(--indent-step) - var(--indent-step) + 5px);
+  width: 2px;
+  background: var(--rail, var(--color-neutral-400));
 }
 .grouphd {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--gutter);
+  padding-top: var(--space-3);
+  padding-right: var(--gutter);
+  padding-bottom: var(--space-3);
   background: var(--surface-group);
   border-top: var(--rule-strong);
   border-bottom: var(--rule-hair);
+  --rail: var(--color-neutral-600);
 }
 /* — subsystem band: one level above the component, so it carries the heavier rule. — */
 .subhd {
@@ -465,7 +499,9 @@ p {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--gutter);
+  padding-top: var(--space-3);
+  padding-right: var(--gutter);
+  padding-bottom: var(--space-3);
   background: var(--color-neutral-200);
   border-top: 3px solid var(--color-text);
   border-bottom: var(--rule-hair);
@@ -474,16 +510,22 @@ p {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 5px var(--gutter) 5px var(--row-indent);
+  padding-top: 5px;
+  padding-right: var(--gutter);
+  padding-bottom: 5px;
   background: var(--surface-subgroup);
   border-bottom: var(--rule-hair);
+  --rail: var(--color-neutral-500);
 }
 .row {
   display: grid;
   align-items: center;
   gap: var(--space-2);
-  padding: 6px var(--gutter) 6px var(--row-indent);
+  padding-top: 6px;
+  padding-right: var(--gutter);
+  padding-bottom: 6px;
   border-bottom: var(--rule-hair);
+  --rail: var(--color-neutral-300);
 }
 .row:hover {
   background: var(--surface-hover);
@@ -496,14 +538,14 @@ p {
   padding-bottom: 11px;
 }
 .backlog.shop .c-dir,
-.backlog.shop .c-lot,
 .backlog.shop .c-range {
   display: none;
 }
+/* Workshop keeps the initials but grows them: a rung is a target across a
+   table, and the row says the word underneath either way. */
 .backlog.shop .lad .seg-opt {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  font-size: 11px;
+  padding: 10px 6px;
+  font-size: 15px;
 }
 .backlog.shop .conf .seg-opt {
   padding: 8px 7px;
@@ -515,6 +557,86 @@ p {
   padding-bottom: 10px;
 }
 /* — inline editors — */
+/* A name grows downwards rather than scrolling sideways: a long title wraps and
+   stays whole while you edit it. field-sizing does this natively where it
+   exists; the height written from scrollHeight covers every other browser. */
+.growtext {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 1.2em;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  resize: none;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  field-sizing: content;
+}
+.growtext:focus {
+  outline: none;
+  box-shadow: 0 1px 0 0 var(--color-accent);
+}
+/* — what this item is, said in words on the row: the pickers show what you could
+   choose, these say what you did. Confidence keeps its hue, and its word. — */
+.picked {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 3px;
+  font-size: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  line-height: 1.2;
+}
+.picked .v {
+  font-size: var(--text-small);
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--color-text);
+}
+.picked .v.H {
+  color: var(--conf-high-fg);
+}
+.picked .v.M {
+  color: var(--conf-med-fg);
+}
+.picked .v.L {
+  color: var(--conf-low-fg);
+}
+/* — the landscape tree: containers and their names, no figures. Same depth
+   language as the backlog, so the two rooms read as one structure. — */
+.tree-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 6px var(--gutter);
+  padding-left: calc(var(--gutter) + var(--depth, 0) * var(--indent-step));
+  border-bottom: var(--rule-hair);
+}
+.tree-row:last-child {
+  border-bottom: 0;
+}
+.tree-row.parent {
+  background: var(--surface-group);
+  border-top: var(--rule-strong);
+}
+.tree-row.child::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--gutter) + var(--depth, 0) * var(--indent-step) - var(--indent-step) + 5px);
+  width: 2px;
+  background: var(--color-neutral-400);
+}
 .mini {
   width: 100%;
   border: 0;
@@ -665,38 +787,108 @@ input[type="radio"] {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-/* — range bar — */
+/* — the five-number range bar: ends flanking the plot, three marks on it — */
 .rangebar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+.rangebar .end {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.2;
+}
+.rangebar .end.hi {
+  text-align: right;
+}
+.rangebar .plot {
   position: relative;
+  flex: 1;
+  min-width: 120px;
+  height: 88px;
+}
+.rangebar .track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 39px;
   height: 10px;
   background: var(--range-track);
 }
-.rangebar .fl {
+/* Likely to P80: the stretch you are actually deciding between. */
+.rangebar .band {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  background: var(--range-likely);
+  top: 39px;
+  height: 10px;
+  background: var(--color-accent-200);
 }
-.rangebar .ft {
+.rangebar .mk {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  background: var(--range-tail);
-}
-.rangebar .tk {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
+  top: 31px;
   width: 2px;
-  background: var(--range-tick);
+  height: 26px;
 }
-.rangecaps {
-  position: relative;
-  height: 15px;
-  font-size: var(--text-label);
-  color: var(--text-tertiary);
+.rangebar .cap {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.rangebar .cap.above {
+  top: 0;
+}
+.rangebar .cap.below {
+  top: 61px;
+}
+.rangebar .v {
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+}
+/* — the distribution behind the P80: ink, one red, same palette as everything
+   else. The shaded area is the commit stretch, so it wears the accent tint. — */
+.pcurve {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.pcurve .shade {
+  fill: var(--color-accent-200);
+}
+.pcurve .line {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 1.5;
+}
+.pcurve .axis {
+  stroke: var(--color-divider);
+  stroke-width: 1;
+}
+.pcurve .foot {
+  fill: var(--text-tertiary);
+}
+.pcurve .mk-likely line {
+  stroke: var(--range-likely);
+}
+.pcurve .mk-likely text {
+  fill: var(--text-secondary);
+}
+.pcurve .mk-expected line {
+  stroke: var(--color-text);
+}
+.pcurve .mk-expected text {
+  fill: var(--color-text);
+}
+.pcurve .mk-p80 line {
+  stroke: var(--color-accent);
+}
+.pcurve .mk-p80 text {
+  fill: var(--emphasis-commit);
 }
 /* — scenario board — */
 .scen {

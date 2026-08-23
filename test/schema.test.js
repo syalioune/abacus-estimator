@@ -85,6 +85,30 @@ describe("migrate", () => {
     expect(out.items[0].tags).toEqual([]);
   });
 
+  it("names asynchronous events in a v5 Flow rung nobody rewrote", () => {
+    const v5 = {
+      version: 5,
+      scales: {
+        FLOW: {
+          S: {
+            days: 3,
+            why: "One file, one direction, format already agreed. Deposited and collected on an existing transport, field mapping only.",
+          },
+          M: { days: 5, why: "our own wording, argued in a workshop" },
+          C: { days: 8, why: "" },
+          V: { days: 13, why: "" },
+          X: { days: 50, why: "" },
+        },
+      },
+    };
+    const out = migrate(v5);
+    expect(out.scales.FLOW.S.why).toMatch(/event/i);
+    expect(out.scales.FLOW.S.days).toBe(3);
+    // A rung the team rewrote is theirs; the migration never argues with it.
+    expect(out.scales.FLOW.M.why).toBe("our own wording, argued in a workshop");
+    expect(migrate(out).scales.FLOW).toEqual(out.scales.FLOW);
+  });
+
   it("drops items of an unknown type rather than crashing on them", () => {
     const out = migrate({ items: [{ id: "x", type: "WIDGET", name: "?", level: "M" }] });
     expect(out.items).toHaveLength(0);

@@ -105,6 +105,56 @@ export function TagInput({ value = [], onChange, placeholder = "add a tag…" })
   );
 }
 
+/* A name is never worth cropping. This grows downwards instead of scrolling
+   sideways, so a long title wraps and stays whole while you edit it. Enter
+   commits rather than opening a second line: these are names, not prose. */
+export function GrowText({ value, onChange, className, style, title, label, placeholder }) {
+  const ref = useRef(null);
+  const fit = (el) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  useEffect(() => fit(ref.current), [value]);
+  /* A narrower column means one more line of name — whether the window
+     resized, the posture changed or a column appeared. Height alone never
+     triggers a refit, so setting it here cannot feed itself. */
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    let width = el.clientWidth;
+    const ro = new ResizeObserver(() => {
+      if (el.clientWidth === width) return;
+      width = el.clientWidth;
+      fit(el);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      title={title}
+      aria-label={label}
+      placeholder={placeholder}
+      spellCheck={false}
+      onChange={(e) => {
+        fit(e.target);
+        onChange(e.target.value);
+      }}
+      onKeyDown={(e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        e.currentTarget.blur();
+      }}
+      className={"growtext" + (className ? " " + className : "")}
+      style={style}
+    />
+  );
+}
+
 export const Select = ({ value, onChange, children, style, title }) => (
   <select value={value} onChange={(e) => onChange(e.target.value)} className="sel" style={style} title={title}>
     {children}

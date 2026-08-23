@@ -13,7 +13,7 @@ import {
 } from "./domain/index.js";
 import * as A from "./state/actions.js";
 import { STORAGE_KEY, detectStorage, loadEstimate, saveEstimate } from "./state/storage.js";
-import { Figure, Select } from "./ui/primitives.jsx";
+import { Figure, GrowText, Select } from "./ui/primitives.jsx";
 import { fmt } from "./ui/format.js";
 import { FilterBar } from "./features/FilterBar.jsx";
 import { AddModal } from "./features/AddModal.jsx";
@@ -178,6 +178,7 @@ export default function App() {
   const addItem = (draft) => setState((s) => A.addItem(s, draft));
   const updItem = (id, p) => setState((s) => A.updateItem(s, id, p));
   const attachAll = (ids, componentId) => setState((s) => A.attachItems(s, ids, componentId));
+  const reviewAll = (ids, reviewed) => setState((s) => A.reviewItems(s, ids, reviewed));
   const delItem = (id) => setState((s) => A.removeItem(s, id));
   const dupItem = (id) => setState((s) => A.duplicateItem(s, id));
 
@@ -216,21 +217,16 @@ export default function App() {
               gap: "var(--space-6)",
             }}
           >
-            <div style={{ minWidth: 0 }}>
+            {/* The title takes the room it needs and wraps: an estimate called
+                "XXXXX OSS/BSS Bottom-Up Quotation V1" is never read half-way. */}
+            <div style={{ flex: "1 1 420px", minWidth: 0 }}>
               <div className="mono-lbl">Development effort</div>
-              <input
+              <GrowText
                 value={state.project}
-                onChange={(e) => setState((s) => A.setProject(s, e.target.value))}
+                onChange={(v) => setState((s) => A.setProject(s, v))}
+                label="Project name"
                 className="ttl"
-                style={{
-                  width: "100%",
-                  maxWidth: 560,
-                  background: "transparent",
-                  border: 0,
-                  padding: 0,
-                  fontSize: "var(--text-figure-xl)",
-                  color: "inherit",
-                }}
+                style={{ fontSize: "var(--text-figure-xl)" }}
               />
               <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
                 <span className="mono-lbl">Scope</span>
@@ -338,6 +334,7 @@ export default function App() {
             components={state.components}
             compName={compName}
             subsystems={state.subsystems}
+            lots={state.lots}
             scales={state.scales}
             spreads={state.spreads}
             levelLabels={state.levelLabels}
@@ -352,6 +349,7 @@ export default function App() {
             onUpdComponent={updComponent}
             onDelComponent={delComponent}
             onAttachAll={attachAll}
+            onReviewAll={reviewAll}
             onOpenAdd={openAdd}
           />
         )}
