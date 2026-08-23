@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { CONF, CONF_BY_ID, DIRS, LEVEL_BY_ID, TYPES, scaleKeyOf } from "../../domain/index.js";
 import { Btn, Chip, ConfirmModal, Eyebrow, GrowText, MiniBtn, NumInput, Select, TagInput } from "../../ui/primitives.jsx";
 import { ConfDot, ConfPicker, Ladder, MixBar } from "../../ui/estimating.jsx";
@@ -36,35 +36,30 @@ export function Backlog({
   const [groupBy, setGroupBy] = useState("component");
   const [attachTo, setAttachTo] = useState("");
   const [selected, setSelected] = useState(null);
-  const [closedGroups, setClosedGroups] = useState(() => new Set());
-  const [closedSections, setClosedSections] = useState(() => new Set());
-  const [closedSubsystems, setClosedSubsystems] = useState(() => new Set());
+  /* Open bands, not closed ones: the room opens closed. A filled backlog is
+     three hundred rows and you come to it for one component, so a band is shut
+     until you say otherwise — and anything arriving later, an import or a new
+     component, arrives shut too, with no bookkeeping to keep it that way. */
+  const [openGroups, setOpenGroups] = useState(() => new Set());
+  const [openSections, setOpenSections] = useState(() => new Set());
+  const [openSubsystems, setOpenSubsystems] = useState(() => new Set());
   const [confirm, setConfirm] = useState(null);
 
   const askConfirm = (message, run) => setConfirm({ message, run });
 
-  const toggleGroup = (key) =>
-    setClosedGroups((s) => {
+  const flip = (setter) => (key) =>
+    setter((s) => {
       const n = new Set(s);
       n.has(key) ? n.delete(key) : n.add(key);
       return n;
     });
-  const toggleSubsystem = (key) =>
-    setClosedSubsystems((s) => {
+  const toggleGroup = flip(setOpenGroups);
+  const toggleSubsystem = flip(setOpenSubsystems);
+  const toggleSection = flip(setOpenSections);
+  const setSectionsOpen = (keys, open) =>
+    setOpenSections((s) => {
       const n = new Set(s);
-      n.has(key) ? n.delete(key) : n.add(key);
-      return n;
-    });
-  const toggleSection = (key) =>
-    setClosedSections((s) => {
-      const n = new Set(s);
-      n.has(key) ? n.delete(key) : n.add(key);
-      return n;
-    });
-  const setSectionsClosed = (keys, closed) =>
-    setClosedSections((s) => {
-      const n = new Set(s);
-      keys.forEach((k) => (closed ? n.add(k) : n.delete(k)));
+      keys.forEach((k) => (open ? n.add(k) : n.delete(k)));
       return n;
     });
 
@@ -106,40 +101,52 @@ export function Backlog({
       ].filter((b) => b.groups.length > 0)
     : [];
 
+  const subKeys = subsystemBuckets.map((b) => b.key);
+  const groupKeys = groups.map((g) => g.key);
+  const sectionKeys =
+    groupBy === "component"
+      ? groups.flatMap((g) => TYPES.filter((t) => g.rows.some((i) => i.type === t.id)).map((t) => `${g.key}:${t.id}`))
+      : [];
+
   const collapseAll = () => {
-    setClosedGroups(new Set(groups.map((g) => g.key)));
-    setClosedSubsystems(new Set(subsystemBuckets.map((b) => b.key)));
-    setClosedSections(
-      new Set(
-        groupBy === "component"
-          ? groups.flatMap((g) => TYPES.filter((t) => g.rows.some((i) => i.type === t.id)).map((t) => `${g.key}:${t.id}`))
-          : [],
-      ),
-    );
+    setOpenGroups(new Set());
+    setOpenSubsystems(new Set());
+    setOpenSections(new Set());
   };
   const expandAll = () => {
-    setClosedGroups(new Set());
-    setClosedSubsystems(new Set());
-    setClosedSections(new Set());
+    setOpenGroups(new Set(groupKeys));
+    setOpenSubsystems(new Set(subKeys));
+    setOpenSections(new Set(sectionKeys));
   };
+
+  /* A filter is already a narrowing: it opens what it found rather than leaving
+     you to hunt through closed bands. Clearing it returns the room to closed. */
+  const wasFiltering = useRef(filterActive);
+  useEffect(() => {
+    if (wasFiltering.current === filterActive) return;
+    wasFiltering.current = filterActive;
+    if (filterActive) expandAll();
+    else collapseAll();
+  });
 
   /* The lot only becomes a choice once there is a second one to move an item to. */
   const showLot = !shop && lots.length > 1;
 
   /* Column budget. Workshop drops direction, lot and the range: same table,
-     same state, same widgets — only the type and the targets grow. */
+     same state, same widgets — only the type and the targets grow. Component
+     and lot share one column, and the ladder shows initials, so the row keeps
+     its own actions on screen instead of pushing them past the edge. */
   const cols = [
-    "minmax(210px, 1fr)",
+    "minmax(200px, 1fr)",
     shop ? "170px" : null,
-    "148px",
-    showLot ? "148px" : null,
-    shop ? null : "76px",
-    shop ? "minmax(220px, 1fr)" : "292px",
-    shop ? "150px" : "110px",
+    "158px",
+    shop ? null : "72px",
+    shop ? "minmax(220px, 1fr)" : "176px",
+    shop ? "150px" : "126px",
     shop ? "64px" : "54px",
-    blind ? null : "74px",
-    blind || shop ? null : "90px",
-    "104px",
+    blind ? null : "72px",
+    blind || shop ? null : "86px",
+    "118px",
   ]
     .filter(Boolean)
     .join(" ");
@@ -190,7 +197,11 @@ export function Backlog({
           </span>
         )}
 
-        <span>
+        {/* Where this item belongs, in one column: the component that totals it and
+            the lot that scopes it. An item's lot is a decision that keeps moving,
+            so it is editable here and not only at creation. */}
+        <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+          <span className="picked">Component</span>
           <Select
             value={it.componentId || ""}
             onChange={(v) => onUpd(it.id, { componentId: v || null })}
@@ -204,26 +215,24 @@ export function Backlog({
               </option>
             ))}
           </Select>
+          {showLot && (
+            <>
+              <span className="picked">Lot</span>
+              <Select
+                value={it.lotId}
+                onChange={(v) => onUpd(it.id, { lotId: v })}
+                style={{ width: "100%" }}
+                title="Move this item to another lot — it changes which scenarios include it"
+              >
+                {lots.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </Select>
+            </>
+          )}
         </span>
-
-        {/* An item belongs to exactly one lot, and which one is a scoping decision
-            that keeps moving — so it is editable here, not only at creation. */}
-        {showLot && (
-          <span className="c-lot">
-            <Select
-              value={it.lotId}
-              onChange={(v) => onUpd(it.id, { lotId: v })}
-              style={{ width: "100%" }}
-              title="Move this item to another lot — it changes which scenarios include it"
-            >
-              {lots.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.name}
-                </option>
-              ))}
-            </Select>
-          </span>
-        )}
 
         {!shop && (
           <span className="c-dir">
@@ -259,6 +268,7 @@ export function Backlog({
             value={it.level}
             labels={levelLabels}
             blind={blind}
+            compact={!shop}
             onPick={(l) => {
               setSelected(it.id);
               onUpd(it.id, { level: l });
@@ -341,10 +351,10 @@ export function Backlog({
             type="button"
             onClick={() => toggleGroup(g.key)}
             className="btn-mini"
-            title={closedGroups.has(g.key) ? "Expand" : "Collapse"}
+            title={openGroups.has(g.key) ? "Collapse" : "Expand"}
             style={{ flex: "none" }}
           >
-            {closedGroups.has(g.key) ? "▸" : "▾"}
+            {openGroups.has(g.key) ? "▾" : "▸"}
           </button>
           <span className="mono-lbl" style={{ flex: "none" }}>
             {groupBy === "component" ? "Component" : "Kind"}
@@ -395,15 +405,10 @@ export function Backlog({
             <span style={{ display: "flex", gap: 3 }}>
               <MiniBtn
                 onClick={() => {
-                  setClosedGroups((s) => {
-                    if (!s.has(g.key)) return s;
-                    const n = new Set(s);
-                    n.delete(g.key);
-                    return n;
-                  });
-                  setSectionsClosed(
+                  setOpenGroups((s) => (s.has(g.key) ? s : new Set([...s, g.key])));
+                  setSectionsOpen(
                     sections.map((sec) => `${g.key}:${sec.key}`),
-                    false,
+                    true,
                   );
                 }}
                 title="Expand every type band in this group"
@@ -412,9 +417,9 @@ export function Backlog({
               </MiniBtn>
               <MiniBtn
                 onClick={() =>
-                  setSectionsClosed(
+                  setSectionsOpen(
                     sections.map((sec) => `${g.key}:${sec.key}`),
-                    true,
+                    false,
                   )
                 }
                 title="Collapse every type band in this group"
@@ -475,7 +480,7 @@ export function Backlog({
           )}
         </div>
 
-        {closedGroups.has(g.key) ? null : g.rows.length === 0 ? (
+        {!openGroups.has(g.key) ? null : g.rows.length === 0 ? (
           <div
             className="sm"
             style={{
@@ -489,7 +494,7 @@ export function Backlog({
         ) : (
           sections.map((sec) => {
             const secKey = `${g.key}:${sec.key}`;
-            const secClosed = closedSections.has(secKey);
+            const secOpen = openSections.has(secKey);
             return (
               <React.Fragment key={sec.key}>
                 {sec.type && (
@@ -498,10 +503,10 @@ export function Backlog({
                       type="button"
                       onClick={() => toggleSection(secKey)}
                       className="btn-mini"
-                      title={secClosed ? "Expand" : "Collapse"}
+                      title={secOpen ? "Collapse" : "Expand"}
                       style={{ flex: "none" }}
                     >
-                      {secClosed ? "▸" : "▾"}
+                      {secOpen ? "▾" : "▸"}
                     </button>
                     <span
                       style={{
@@ -532,7 +537,7 @@ export function Backlog({
                     </span>
                   </div>
                 )}
-                {!secClosed && sec.rows.map(rowFor)}
+                {secOpen && sec.rows.map(rowFor)}
               </React.Fragment>
             );
           })
@@ -617,13 +622,9 @@ export function Backlog({
         className="btn btn-primary btn-fab"
         onClick={() => onOpenAdd("item")}
         title="Add a feature, API, flow, batch, screen, component, subsystem or lot"
-        style={{
-          position: "fixed",
-          right: "var(--space-6)",
-          top: "50%",
-          transform: "translateY(-50%)",
-          zIndex: 40,
-        }}
+        /* Docked at the foot of the window, not across the middle of it: a row's
+           own actions live at the right-hand end and must stay clickable. */
+        style={{ position: "fixed", right: "var(--space-6)", bottom: "var(--space-6)", zIndex: 40 }}
       >
         <IconPlus />
         Add
@@ -653,7 +654,7 @@ export function Backlog({
         <div className={"panel backlog" + (shop ? " shop" : "")}>
           {useSubsystemGrouping
             ? subsystemBuckets.map((b) => {
-                const subClosed = closedSubsystems.has(b.key);
+                const subOpen = openSubsystems.has(b.key);
                 const subDays = sum(b.groups.flatMap((g) => g.rows));
                 return (
                   <React.Fragment key={b.key}>
@@ -662,10 +663,10 @@ export function Backlog({
                         type="button"
                         onClick={() => toggleSubsystem(b.key)}
                         className="btn-mini"
-                        title={subClosed ? "Expand" : "Collapse"}
+                        title={subOpen ? "Collapse" : "Expand"}
                         style={{ flex: "none" }}
                       >
-                        {subClosed ? "▸" : "▾"}
+                        {subOpen ? "▾" : "▸"}
                       </button>
                       <span className="mono-lbl" style={{ flex: "none" }}>
                         Subsystem
@@ -678,7 +679,7 @@ export function Backlog({
                         {blind ? "" : ` · ${fmt(subDays)} md`}
                       </span>
                     </div>
-                    {!subClosed && b.groups.map(renderGroup)}
+                    {subOpen && b.groups.map(renderGroup)}
                   </React.Fragment>
                 );
               })

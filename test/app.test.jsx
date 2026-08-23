@@ -7,6 +7,15 @@ import App from "../src/App.jsx";
 describe("App", () => {
   beforeEach(() => window.localStorage.clear());
 
+  /* The backlog opens collapsed, so anything that argues about rows opens it
+     first — the same button a user reaches for. */
+  const openBacklog = async (user) => {
+    await user.click(screen.getByRole("button", { name: "Data" }));
+    await user.click(screen.getByRole("button", { name: "Load example" }));
+    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    await user.click(screen.getByTitle("Expand every component and type band"));
+  };
+
   it("mounts with an empty estimate", async () => {
     render(<App />);
     expect(await screen.findByDisplayValue("New project")).toBeTruthy();
@@ -26,9 +35,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByDisplayValue("New project");
-    await user.click(screen.getByRole("button", { name: "Data" }));
-    await user.click(screen.getByRole("button", { name: "Load example" }));
-    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    await openBacklog(user);
     // The component name is editable in place, and it wraps rather than crops.
     expect(screen.getAllByDisplayValue("order-service").some((el) => el.tagName === "TEXTAREA")).toBe(true);
     // The header must show a P80 the moment there is work to price.
@@ -39,9 +46,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByDisplayValue("New project");
-    await user.click(screen.getByRole("button", { name: "Data" }));
-    await user.click(screen.getByRole("button", { name: "Load example" }));
-    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    await openBacklog(user);
     await user.click(screen.getByRole("button", { name: /^Blind sizing/ }));
     expect(document.body.textContent).not.toMatch(/\d+\s*md/);
   });
@@ -50,9 +55,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByDisplayValue("New project");
-    await user.click(screen.getByRole("button", { name: "Data" }));
-    await user.click(screen.getByRole("button", { name: "Load example" }));
-    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    await openBacklog(user);
     await user.click(screen.getByRole("button", { name: "Workshop" }));
     const [markBtn] = screen.getAllByRole("button", { name: "mark reviewed" });
     await user.click(markBtn);
@@ -76,9 +79,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByDisplayValue("New project");
-    await user.click(screen.getByRole("button", { name: "Data" }));
-    await user.click(screen.getByRole("button", { name: "Load example" }));
-    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    await openBacklog(user);
     const readouts = [...document.querySelectorAll(".picked")].map((el) => el.textContent);
     expect(readouts.some((t) => /^Complexity/.test(t))).toBe(true);
     expect(readouts.some((t) => /^Confidence/.test(t))).toBe(true);
@@ -90,9 +91,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByDisplayValue("New project");
-    await user.click(screen.getByRole("button", { name: "Data" }));
-    await user.click(screen.getByRole("button", { name: "Load example" }));
-    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    await openBacklog(user);
     const [lotSel] = screen.getAllByTitle(/Move this item to another lot/);
     const target = [...lotSel.options].find((o) => o.textContent !== lotSel.selectedOptions[0].textContent);
     await user.selectOptions(lotSel, target.value);
@@ -113,21 +112,48 @@ describe("App", () => {
     expect(screen.getAllByText(/Baseline/).length).toBeGreaterThan(0);
   });
 
-  it("shows rung words, never day counts, on the ladder", async () => {
+  it("shows rung initials in the dense row, and never a day count", async () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByDisplayValue("New project");
-    await user.click(screen.getByRole("button", { name: "Data" }));
-    await user.click(screen.getByRole("button", { name: "Load example" }));
-    await user.click(screen.getByRole("button", { name: "Backlog" }));
-    const rungs = document.querySelectorAll(".lad .seg-opt");
+    await openBacklog(user);
+    const rungs = [...document.querySelectorAll(".lad .seg-opt")];
     expect(rungs.length).toBeGreaterThan(0);
-    expect([...rungs].slice(0, 5).map((b) => b.textContent)).toEqual([
+    expect(rungs.slice(0, 5).map((b) => b.textContent)).toEqual(["S", "M", "C", "VC", "O"]);
+    // The word is never lost: it labels the control and the row says it in full.
+    expect(rungs.slice(0, 5).map((b) => b.getAttribute("aria-label"))).toEqual([
       "Simple",
       "Medium",
       "Complex",
       "Very complex",
       "Outstanding",
     ]);
+    expect(rungs.some((b) => /\d/.test(b.textContent))).toBe(false);
+  });
+
+  it("shows the whole rung word in the workshop, where a room is reading it", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await openBacklog(user);
+    await user.click(screen.getByRole("button", { name: "Workshop" }));
+    const rungs = [...document.querySelectorAll(".lad .seg-opt")];
+    expect(rungs.slice(0, 5).map((b) => b.textContent)).toEqual(["Simple", "Medium", "Complex", "Very complex", "Outstanding"]);
+  });
+
+  it("opens with every band collapsed, and expands on request", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await user.click(screen.getByRole("button", { name: "Data" }));
+    await user.click(screen.getByRole("button", { name: "Load example" }));
+    await user.click(screen.getByRole("button", { name: "Backlog" }));
+    // Subsystem bands are there to be opened; nothing under them is rendered yet.
+    expect(screen.getAllByText("Backend").length).toBeGreaterThan(0);
+    expect(document.querySelectorAll(".row").length).toBe(0);
+    await user.click(screen.getByTitle("Expand every component and type band"));
+    expect(document.querySelectorAll(".row").length).toBeGreaterThan(0);
+    await user.click(screen.getByTitle("Collapse every component and type band"));
+    expect(document.querySelectorAll(".row").length).toBe(0);
   });
 });

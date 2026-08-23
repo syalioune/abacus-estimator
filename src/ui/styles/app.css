@@ -354,6 +354,14 @@ p {
   overflow-wrap: break-word;
   text-align: center;
 }
+/* Dense posture: the rung shows its initials and the row says the word
+   underneath, so the table keeps its own actions in view. */
+.lad.compact .seg-opt {
+  padding: 5px 4px;
+  font-size: var(--text-table);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
 /* — confidence: the one dimension carrying hue — */
 .conf .seg-opt {
   padding: 5px 9px;
@@ -530,7 +538,6 @@ p {
   padding-bottom: 11px;
 }
 .backlog.shop .c-dir,
-.backlog.shop .c-lot,
 .backlog.shop .c-range {
   display: none;
 }

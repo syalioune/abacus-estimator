@@ -2,12 +2,23 @@ import React from "react";
 import { CONF, LEVELS } from "../domain/index.js";
 import { fmt } from "./format.js";
 
+/* Initials for the dense posture: "Very complex" reads "VC" in the row and
+   stays a word everywhere it is argued — the tooltip, the readout under the
+   ladder, and the abacus all spell it out. */
+const initialsOf = (name) =>
+  (name || "")
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase())
+    .join("")
+    .slice(0, 3);
+
 /* The ladder. Five named rungs, equal width, no colour cue and no number:
    the argument in the room is "Complex or Very complex?", never "8 or 13?".
    The days live in the abacus and in the totals, in one place. */
-export function Ladder({ scale, value, onPick, labels, showDays = false, blind = false }) {
+export function Ladder({ scale, value, onPick, labels, showDays = false, blind = false, compact = false }) {
   return (
-    <span className="seg lad">
+    <span className={"seg lad" + (compact ? " compact" : "")}>
       {LEVELS.map((l) => {
         const d = scale?.[l.id]?.days;
         const name = labels?.[l.id] ?? l.label;
@@ -17,10 +28,11 @@ export function Ladder({ scale, value, onPick, labels, showDays = false, blind =
             type="button"
             onClick={onPick ? () => onPick(l.id) : undefined}
             title={`${name}${!blind && d != null ? ` — ${d} md` : ""} — ${scale?.[l.id]?.why ?? ""}`}
+            aria-label={name}
             className={"seg-opt" + (value === l.id ? " on" : "")}
             style={{ cursor: onPick ? "pointer" : "default" }}
           >
-            {showDays ? <span className="num">{d}</span> : name}
+            {showDays ? <span className="num">{d}</span> : compact ? initialsOf(name) : name}
           </button>
         );
       })}
