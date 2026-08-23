@@ -14,7 +14,7 @@ it is short and every rule in it has a reason.
 ```bash
 npm install
 npm run dev            # Vite dev server on :5173
-npm test               # vitest, run once (132 tests)
+npm test               # vitest, run once (134 tests)
 npm run test:watch
 npm run test:coverage  # thresholds enforced on src/domain and src/state
 npm run lint           # eslint, zero warnings tolerated
@@ -41,7 +41,7 @@ src/App.jsx    wiring: state, scope, selectors, tab routing.
 
 `src/domain/**` and `src/state/**` are lint-blocked from importing `react`,
 `react-dom`, or anything under `ui/`/`features/` (see `eslint.config.js`). This
-is what keeps 120 of 132 tests running renderer-free in ~100ms, and why the
+is what keeps 121 of 134 tests running renderer-free in ~100ms, and why the
 estimation rules are reviewable on their own.
 
 **Where a change belongs:**

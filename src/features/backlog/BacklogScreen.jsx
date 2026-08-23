@@ -5,6 +5,33 @@ import { ConfDot, ConfPicker, Ladder, MixBar } from "../../ui/estimating.jsx";
 import { fmt } from "../../ui/format.js";
 import { IconComment, IconCopy, IconPlus, IconTrash } from "../../ui/icons.jsx";
 
+/* How far a band has been reviewed, and the one button that settles the rest.
+   A workshop moves band by band — "we've done the APIs of order-service" — so
+   the count and the action sit together, on the band that owns them. It marks
+   exactly the rows on screen, which is what a filtered view is for. */
+function ReviewBand({ rows, what, onReviewAll }) {
+  const done = rows.filter((r) => r.reviewed).length;
+  const all = done === rows.length;
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", flex: "none" }}>
+      <span className={"reviewed-badge num " + (all ? "done" : "pending")}>
+        {done}/{rows.length} reviewed
+      </span>
+      <MiniBtn
+        onClick={() =>
+          onReviewAll(
+            rows.map((r) => r.id),
+            !all,
+          )
+        }
+        title={all ? `Take the review mark off ${what}` : `Mark ${what} reviewed`}
+      >
+        {all ? "unmark all" : "mark all reviewed"}
+      </MiniBtn>
+    </span>
+  );
+}
+
 /* The backlog — the room where items are argued and sized. Components hold
    nothing themselves; their kind sections do. Bands and rules, not cards. */
 export function Backlog({
@@ -31,6 +58,7 @@ export function Backlog({
   onUpdComponent,
   onDelComponent,
   onAttachAll,
+  onReviewAll,
   onOpenAdd,
 }) {
   const [groupBy, setGroupBy] = useState("component");
@@ -392,16 +420,7 @@ export function Backlog({
           <span className="num sm">
             {g.rows.length} items{blind ? "" : ` · ${fmt(gDays)} md · P80 ${fmt(pert(g.rows).p80)} md`}
           </span>
-          {shop &&
-            g.rows.length > 0 &&
-            (() => {
-              const done = g.rows.filter((r) => r.reviewed).length;
-              return (
-                <span className={"reviewed-badge num " + (done === g.rows.length ? "done" : "pending")}>
-                  {done}/{g.rows.length} reviewed
-                </span>
-              );
-            })()}
+          {shop && g.rows.length > 0 && <ReviewBand rows={g.rows} what="this component" onReviewAll={onReviewAll} />}
           {sections.length > 0 && (
             <span style={{ display: "flex", gap: 3 }}>
               <MiniBtn
@@ -524,6 +543,9 @@ export function Backlog({
                       {sec.rows.length}
                       {blind ? "" : ` · ${fmt(sum(sec.rows))} md`}
                     </span>
+                    {shop && (
+                      <ReviewBand rows={sec.rows} what={`every ${sec.type.label.toLowerCase()} here`} onReviewAll={onReviewAll} />
+                    )}
                     <span
                       className="sm"
                       style={{

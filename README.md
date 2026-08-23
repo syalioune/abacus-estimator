@@ -120,7 +120,7 @@ Also published to Docker Hub as `syalioune/abacus-estimator:latest`.
 ```bash
 npm install
 npm run dev       # http://localhost:5173
-npm test          # 132 tests, domain + smoke
+npm test          # 134 tests, domain + smoke
 npm run build     # static bundle in dist/
 ```
 

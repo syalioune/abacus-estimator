@@ -38,6 +38,20 @@ describe("items", () => {
     expect(s.items[0].reviewed).toBe(false);
   });
 
+  it("reviews a whole band at once, and leaves everything outside it alone", () => {
+    let s = A.addItem(emptyEstimate(), { type: "API", name: "POST /orders" });
+    s = A.addItem(s, { type: "API", name: "GET /orders" });
+    s = A.addItem(s, { type: "GUI", name: "Order list" });
+    const apis = s.items.filter((i) => i.type === "API").map((i) => i.id);
+
+    const marked = A.reviewItems(s, apis, true);
+    expect(marked.items.filter((i) => i.reviewed).map((i) => i.type)).toEqual(["API", "API"]);
+    expect(marked.items.find((i) => i.type === "GUI").reviewed).toBe(false);
+
+    // The same band unmarks: one button, both directions.
+    expect(A.reviewItems(marked, apis, false).items.some((i) => i.reviewed)).toBe(false);
+  });
+
   it("resets review status on duplicate, since a copy has not itself been looked at", () => {
     const { s } = withItem();
     const reviewed = A.updateItem(s, s.items[0].id, { reviewed: true });

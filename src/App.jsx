@@ -178,6 +178,7 @@ export default function App() {
   const addItem = (draft) => setState((s) => A.addItem(s, draft));
   const updItem = (id, p) => setState((s) => A.updateItem(s, id, p));
   const attachAll = (ids, componentId) => setState((s) => A.attachItems(s, ids, componentId));
+  const reviewAll = (ids, reviewed) => setState((s) => A.reviewItems(s, ids, reviewed));
   const delItem = (id) => setState((s) => A.removeItem(s, id));
   const dupItem = (id) => setState((s) => A.duplicateItem(s, id));
 
@@ -348,6 +349,7 @@ export default function App() {
             onUpdComponent={updComponent}
             onDelComponent={delComponent}
             onAttachAll={attachAll}
+            onReviewAll={reviewAll}
             onOpenAdd={openAdd}
           />
         )}

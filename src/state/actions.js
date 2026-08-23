@@ -72,6 +72,11 @@ export const attachItems = (s, ids, componentId) => {
   const set = new Set(ids);
   return withItems(s, (xs) => xs.map((x) => (set.has(x.id) ? { ...x, componentId } : x)));
 };
+/** A workshop reviews a whole band at a time — a kind of work, or a component. */
+export const reviewItems = (s, ids, reviewed) => {
+  const set = new Set(ids);
+  return withItems(s, (xs) => xs.map((x) => (set.has(x.id) ? { ...x, reviewed } : x)));
+};
 
 export const addLot = (s, name) => {
   const n = (name || "").trim();

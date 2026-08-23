@@ -63,6 +63,23 @@ describe("App", () => {
     expect(screen.getAllByText(/^\d+\/\d+ reviewed$/).length).toBeGreaterThan(0);
   });
 
+  it("marks a whole band reviewed from its header, and unmarks it again", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await openBacklog(user);
+    await user.click(screen.getByRole("button", { name: "Workshop" }));
+
+    // The first band button belongs to the first component; its count follows it.
+    const [bandBtn] = screen.getAllByRole("button", { name: "mark all reviewed" });
+    await user.click(bandBtn);
+    expect(screen.getAllByText(/^(\d+)\/\1 reviewed$/).length).toBeGreaterThan(0);
+
+    const [undo] = screen.getAllByRole("button", { name: "unmark all" });
+    await user.click(undo);
+    expect(screen.getAllByRole("button", { name: "mark all reviewed" }).length).toBeGreaterThan(0);
+  });
+
   it("lands on Home and opens the add modal on the right tab from its buttons", async () => {
     const user = userEvent.setup();
     render(<App />);
