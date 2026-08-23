@@ -129,6 +129,49 @@ describe("App", () => {
     expect(screen.getAllByText(/Baseline/).length).toBeGreaterThan(0);
   });
 
+  it("draws the three-point range with every figure on it, none printed over another", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await user.click(screen.getByRole("button", { name: "Data" }));
+    await user.click(screen.getByRole("button", { name: "Load example" }));
+    await user.click(screen.getByRole("button", { name: "Effort" }));
+
+    const bar = document.querySelector(".rangebar");
+    expect(bar.textContent).toMatch(/Optimistic/);
+    expect(bar.textContent).toMatch(/Pessimistic/);
+    const caps = [...bar.querySelectorAll(".cap")];
+    expect(caps.map((c) => c.querySelector(".mono-lbl").textContent)).toEqual(["Likely", "P80", "Expected"]);
+    // Each caption carries its own figure, so the bar reads without the table.
+    expect(caps.every((c) => /\d/.test(c.querySelector(".v").textContent))).toBe(true);
+    // The two that share the upper side are kept apart.
+    const left = (c) => parseFloat(c.style.left);
+    expect(Math.abs(left(caps[1]) - left(caps[0]))).toBeGreaterThan(10);
+
+    // Marks stay where their figures fall: likely ≤ expected ≤ P80 along the bar.
+    const marks = [...bar.querySelectorAll(".mk")].map((m) => parseFloat(m.style.left));
+    expect(marks[0]).toBeLessThanOrEqual(marks[1]);
+    expect(marks[1]).toBeLessThanOrEqual(marks[2]);
+  });
+
+  it("shades the curve up to the P80, not past it", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByDisplayValue("New project");
+    await user.click(screen.getByRole("button", { name: "Data" }));
+    await user.click(screen.getByRole("button", { name: "Load example" }));
+    await user.click(screen.getByRole("button", { name: "Effort" }));
+
+    const svg = document.querySelector("svg.pcurve");
+    const points = svg.querySelector("polygon.shade").getAttribute("points").trim().split(/\s+/);
+    const closingX = parseFloat(points[points.length - 1].split(",")[0]);
+    const p80X = parseFloat(svg.querySelector(".mk-p80 line").getAttribute("x1"));
+    // The shaded area is the 80% you commit to; closing it at the right-hand
+    // edge instead would shade the whole distribution.
+    expect(closingX).toBeCloseTo(p80X, 1);
+    expect(closingX).toBeLessThan(parseFloat(svg.querySelector(".axis").getAttribute("x2")));
+  });
+
   it("shows rung initials in the dense row, and never a day count", async () => {
     const user = userEvent.setup();
     render(<App />);

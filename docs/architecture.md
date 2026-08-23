@@ -24,7 +24,7 @@ that is enforced by lint rather than by convention.
 The point is not tidiness. The estimation rules — how a rung becomes days, how
 mutualisation is pooled, how variances combine — are the part that has to be
 right, and they are the part a reviewer needs to be able to read on its own.
-Keeping them framework-free means 121 of the 134 tests run without a renderer, in
+Keeping them framework-free means 121 of the 136 tests run without a renderer, in
 about 100 ms, so there is no excuse for not testing a change to them.
 
 ## The domain

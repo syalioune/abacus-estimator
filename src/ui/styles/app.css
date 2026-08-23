@@ -787,38 +787,108 @@ input[type="radio"] {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-/* — range bar — */
+/* — the five-number range bar: ends flanking the plot, three marks on it — */
 .rangebar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+.rangebar .end {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.2;
+}
+.rangebar .end.hi {
+  text-align: right;
+}
+.rangebar .plot {
   position: relative;
+  flex: 1;
+  min-width: 120px;
+  height: 88px;
+}
+.rangebar .track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 39px;
   height: 10px;
   background: var(--range-track);
 }
-.rangebar .fl {
+/* Likely to P80: the stretch you are actually deciding between. */
+.rangebar .band {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  background: var(--range-likely);
+  top: 39px;
+  height: 10px;
+  background: var(--color-accent-200);
 }
-.rangebar .ft {
+.rangebar .mk {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  background: var(--range-tail);
-}
-.rangebar .tk {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
+  top: 31px;
   width: 2px;
-  background: var(--range-tick);
+  height: 26px;
 }
-.rangecaps {
-  position: relative;
-  height: 15px;
-  font-size: var(--text-label);
-  color: var(--text-tertiary);
+.rangebar .cap {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.rangebar .cap.above {
+  top: 0;
+}
+.rangebar .cap.below {
+  top: 61px;
+}
+.rangebar .v {
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+}
+/* — the distribution behind the P80: ink, one red, same palette as everything
+   else. The shaded area is the commit stretch, so it wears the accent tint. — */
+.pcurve {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.pcurve .shade {
+  fill: var(--color-accent-200);
+}
+.pcurve .line {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 1.5;
+}
+.pcurve .axis {
+  stroke: var(--color-divider);
+  stroke-width: 1;
+}
+.pcurve .foot {
+  fill: var(--text-tertiary);
+}
+.pcurve .mk-likely line {
+  stroke: var(--range-likely);
+}
+.pcurve .mk-likely text {
+  fill: var(--text-secondary);
+}
+.pcurve .mk-expected line {
+  stroke: var(--color-text);
+}
+.pcurve .mk-expected text {
+  fill: var(--color-text);
+}
+.pcurve .mk-p80 line {
+  stroke: var(--color-accent);
+}
+.pcurve .mk-p80 text {
+  fill: var(--emphasis-commit);
 }
 /* — scenario board — */
 .scen {
