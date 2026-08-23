@@ -134,14 +134,15 @@ export function Backlog({
 
   /* Column budget. Workshop drops direction, lot and the range: same table,
      same state, same widgets — only the type and the targets grow. Component
-     and lot share one column, and the ladder shows initials, so the row keeps
-     its own actions on screen instead of pushing them past the edge. */
+     and lot share one column, and the ladder shows initials in both postures,
+     so the row keeps its own actions on screen instead of pushing them past
+     the edge — and the name gets the room the ladder gave up. */
   const cols = [
     "minmax(200px, 1fr)",
     shop ? "170px" : null,
     "158px",
     shop ? null : "72px",
-    shop ? "minmax(220px, 1fr)" : "176px",
+    shop ? "212px" : "176px",
     shop ? "150px" : "126px",
     shop ? "64px" : "54px",
     blind ? null : "72px",
@@ -268,7 +269,7 @@ export function Backlog({
             value={it.level}
             labels={levelLabels}
             blind={blind}
-            compact={!shop}
+            compact
             onPick={(l) => {
               setSelected(it.id);
               onUpd(it.id, { level: l });

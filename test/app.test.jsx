@@ -131,14 +131,17 @@ describe("App", () => {
     expect(rungs.some((b) => /\d/.test(b.textContent))).toBe(false);
   });
 
-  it("shows the whole rung word in the workshop, where a room is reading it", async () => {
+  it("keeps the initials in the workshop, with the word still on the row", async () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByDisplayValue("New project");
     await openBacklog(user);
     await user.click(screen.getByRole("button", { name: "Workshop" }));
     const rungs = [...document.querySelectorAll(".lad .seg-opt")];
-    expect(rungs.slice(0, 5).map((b) => b.textContent)).toEqual(["Simple", "Medium", "Complex", "Very complex", "Outstanding"]);
+    expect(rungs.slice(0, 5).map((b) => b.textContent)).toEqual(["S", "M", "C", "VC", "O"]);
+    expect(rungs[3].getAttribute("aria-label")).toBe("Very complex");
+    const readouts = [...document.querySelectorAll(".picked")].map((el) => el.textContent);
+    expect(readouts.some((t) => t.includes("Very complex"))).toBe(true);
   });
 
   it("opens with every band collapsed, and expands on request", async () => {

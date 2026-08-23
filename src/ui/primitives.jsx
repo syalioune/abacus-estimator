@@ -116,12 +116,20 @@ export function GrowText({ value, onChange, className, style, title, label, plac
     el.style.height = `${el.scrollHeight}px`;
   };
   useEffect(() => fit(ref.current), [value]);
-  /* A narrower window means a narrower column means one more line of name.
-     Without this the name would be cropped again the moment you resize. */
+  /* A narrower column means one more line of name — whether the window
+     resized, the posture changed or a column appeared. Height alone never
+     triggers a refit, so setting it here cannot feed itself. */
   useEffect(() => {
-    const refit = () => fit(ref.current);
-    window.addEventListener("resize", refit);
-    return () => window.removeEventListener("resize", refit);
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    let width = el.clientWidth;
+    const ro = new ResizeObserver(() => {
+      if (el.clientWidth === width) return;
+      width = el.clientWidth;
+      fit(el);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
   return (
     <textarea
